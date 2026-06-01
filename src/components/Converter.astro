@@ -718,7 +718,7 @@ const { defaultTo = "png", defaultFrom, id = "converter" } = Astro.props;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `image-convertor-${Date.now()}.zip`;
+        a.download = `pixelmorph-${Date.now()}.zip`;
         document.body.appendChild(a);
         a.click();
         a.remove();

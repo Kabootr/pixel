@@ -17,11 +17,11 @@ interface Props {
 }
 
 const {
-  title = "Online Image Convertor — Free, Private, In-Browser Image Converter",
-  description = "Free Online Image Convertor — convert PNG, JPG, WebP, GIF, SVG, ICO and TIFF in your browser. No uploads, no signup, no limits. 100% private and instant.",
+  title = "PixelMorph — Free, Private, In-Browser Image Converter",
+  description = "PixelMorph — convert PNG, JPG, WebP, GIF, SVG, ICO and TIFF in your browser. No uploads, no signup, no limits. 100% private and instant.",
   canonical,
   ogImage = "/og.png",
-  keywords = "image convertor, online image convertor, image converter, online image converter, free image convertor, free image converter, png image convertor, jpeg image convertor, jpg image convertor, svg image convertor, vector image convertor, high resolution image convertor, 4k image convertor, web image convertor tool, image convertor to jpg, image convertor to jpeg, image convertor to png, image convertor to webp, image format converter, png to jpg, jpg to png, png to webp, jpg to webp, webp to png, webp to jpg, svg to png, png to svg, tiff to jpg, png to ico, ico converter, favicon generator, batch image converter, bulk image converter, browser image converter, no upload image converter, private image converter, convert image online, change image format, client side image converter",
+  keywords = "pixelmorph, image converter, online image converter, free image converter, png image converter, jpeg image converter, jpg image converter, svg image converter, vector image converter, high resolution image converter, 4k image converter, web image converter tool, image converter to jpg, image converter to jpeg, image converter to png, image converter to webp, image format converter, png to jpg, jpg to png, png to webp, jpg to webp, webp to png, webp to jpg, svg to png, png to svg, tiff to jpg, png to ico, ico converter, favicon generator, batch image converter, bulk image converter, browser image converter, no upload image converter, private image converter, convert image online, change image format, client side image converter",
   robots = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
   jsonLd,
   showNav = true,
@@ -52,8 +52,8 @@ const GOOGLE_SITE_VERIFICATION = "";
     <meta name="keywords" content={keywords} />
     <meta name="robots" content={robots} />
     <meta name="googlebot" content={robots} />
-    <meta name="author" content="Image Convertor" />
-    <meta name="application-name" content="Image Convertor" />
+    <meta name="author" content="PixelMorph" />
+    <meta name="application-name" content="PixelMorph" />
     <link rel="canonical" href={canonicalUrl} />
     {GOOGLE_SITE_VERIFICATION && (
       <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />
@@ -70,7 +70,7 @@ const GOOGLE_SITE_VERIFICATION = "";
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={title} />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:site_name" content="Image Convertor" />
+    <meta property="og:site_name" content="PixelMorph" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
@@ -80,7 +80,7 @@ const GOOGLE_SITE_VERIFICATION = "";
     <meta name="twitter:image" content={ogImageUrl} />
     <meta name="twitter:image:alt" content={title} />
     <meta name="twitter:url" content={canonicalUrl} />
-    <meta name="twitter:domain" content="realonlineruler.com" />
+    <meta name="twitter:domain" content="pixelmorph.app" />
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -99,10 +99,25 @@ const GOOGLE_SITE_VERIFICATION = "";
       href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"
     />
 
-    <!-- Theme color -->
-    <meta name="theme-color" content="#ffffff" />
+    <!-- Theme color (kept in sync with current data-theme by the toggle script) -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
     <meta name="msapplication-TileColor" content="#7928ca" />
     <meta name="format-detection" content="telephone=no" />
+
+    <!-- Dark-mode FOUC prevention — must run before paint -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem("pm-theme");
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = stored || (prefersDark ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          /* localStorage blocked — fall through, default light */
+        }
+      })();
+    </script>
 
     <!-- JSON-LD structured data -->
     {jsonLdArray.map((schema) => (

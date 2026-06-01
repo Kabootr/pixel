@@ -14,8 +14,8 @@ export async function getStaticPaths() {
 
 const { from, to } = Astro.props;
 
-const title = `${from.label} to ${to.label} Converter — Free Online Image Convertor`;
-const description = `Free Online Image Convertor for ${from.label} to ${to.label}. Convert ${from.label} files to ${to.label} in your browser — no upload, no signup, no file-size limit. 100% private and instant.`;
+const title = `${from.label} to ${to.label} Converter — PixelMorph`;
+const description = `PixelMorph — convert ${from.label} files to ${to.label} in your browser. No upload, no signup, no file-size limit. 100% private and instant.`;
 const keywords = [
   `${from.label.toLowerCase()} to ${to.label.toLowerCase()} converter`,
   `${from.label.toLowerCase()} to ${to.label.toLowerCase()}`,
@@ -23,7 +23,7 @@ const keywords = [
   `${from.label.toLowerCase()} to ${to.label.toLowerCase()} online`,
   `free ${from.label.toLowerCase()} to ${to.label.toLowerCase()} converter`,
   `${from.label.toLowerCase()} to ${to.label.toLowerCase()} no upload`,
-  `online image convertor`,
+  `pixelmorph`,
   `online image converter`,
   `${from.label.toLowerCase()} converter`,
   `${to.label.toLowerCase()} converter`,
@@ -31,7 +31,7 @@ const keywords = [
   `batch ${from.label.toLowerCase()} to ${to.label.toLowerCase()}`,
 ].join(", ");
 
-const siteUrl = "https://realonlineruler.com";
+const siteUrl = "https://pixelmorph.app";
 const pageUrl = `${siteUrl}/${from.id}-to-${to.id}`;
 
 const jsonLd = [
@@ -39,7 +39,7 @@ const jsonLd = [
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: `${from.label} to ${to.label} Converter`,
-    alternateName: `Online ${from.label} to ${to.label} Convertor`,
+    alternateName: `PixelMorph ${from.label} to ${to.label} Converter`,
     url: pageUrl,
     applicationCategory: "MultimediaApplication",
     applicationSubCategory: "Image Converter",
@@ -58,7 +58,7 @@ const jsonLd = [
     "@context": "https://schema.org",
     "@type": "HowTo",
     name: `How to convert ${from.label} to ${to.label} online for free`,
-    description: `Convert ${from.label} files to ${to.label} in your browser using a free Online Image Convertor. No upload required.`,
+    description: `Convert ${from.label} files to ${to.label} in your browser with PixelMorph. No upload required.`,
     totalTime: "PT10S",
     supply: [{ "@type": "HowToSupply", name: `${from.label} image file` }],
     tool: [{ "@type": "HowToTool", name: "Modern web browser" }],
@@ -87,7 +87,7 @@ const jsonLd = [
       {
         "@type": "ListItem",
         position: 1,
-        name: "Online Image Convertor",
+        name: "PixelMorph",
         item: `${siteUrl}/`,
       },
       {

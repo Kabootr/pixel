@@ -56,10 +56,44 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Theme — dark mode overrides
+   The light defaults live in @theme above. We override the same tokens
+   when [data-theme="dark"] is set on <html> (by the FOUC script in
+   Layout.astro), so every component that reads var(--color-*) flips
+   automatically.
+   ───────────────────────────────────────────────────────────── */
+:root[data-theme="dark"] {
+  --color-ink: #fafafa;
+  --color-on-primary: #0a0a0a;
+  --color-body: #b4b4b4;
+  --color-mute: #888888;
+  --color-hairline: #2a2a2a;
+  --color-hairline-strong: #4a4a4a;
+  --color-canvas: #0a0a0a;
+  --color-canvas-soft: #141414;
+  --color-canvas-soft-2: #1f1f1f;
+
+  /* Nav uses a translucent surface; needs a dark variant */
+  --color-nav-bg: rgba(10, 10, 10, 0.85);
+  /* The Hero fades to the page background; override the hardcoded white stops */
+  --color-hero-fade-mid: rgba(10, 10, 10, 0.6);
+  --color-hero-fade-end: rgba(10, 10, 10, 1);
+  /* Primary CTA hover (was a hardcoded #2a2a2a on the dark ink) */
+  --color-primary-hover: #d4d4d4;
+
+  /* Link colors keep their hue but bump contrast on dark */
+  --color-link: #4ea3ff;
+  --color-link-deep: #7ab9ff;
+}
+
+/* ─────────────────────────────────────────────────────────────
    Base
    ───────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 html {
@@ -219,7 +253,7 @@ img, svg, video { max-width: 100%; height: auto; }
   border: 1px solid var(--color-ink);
 }
 .btn-primary:hover {
-  background-color: #2a2a2a;
+  background-color: var(--color-primary-hover, #2a2a2a);
 }
 .btn-primary:active { transform: translateY(1px); }
 .btn-primary:disabled {

@@ -5,7 +5,7 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
 
 <header class="nav-root">
   <div class="page-container nav-inner">
-    <a href="/" class="brand" aria-label="Image Convertor home">
+    <a href="/" class="brand" aria-label="PixelMorph home">
       <span class="brand-mark" aria-hidden="true">
         <!-- Tiny mesh-gradient logo mark -->
         <svg viewBox="0 0 32 32" width="22" height="22">
@@ -20,7 +20,7 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
           <path d="M10 21 L14 14 L18 19 L22 11" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
         </svg>
       </span>
-      <span class="brand-name">Image Convertor</span>
+      <span class="brand-name">PixelMorph</span>
     </a>
 
     <nav class="nav-links" aria-label="Primary">
@@ -30,7 +30,28 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     </nav>
 
     <div class="nav-ctas">
-      <a class="nav-cta nav-cta-ghost" href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      <button
+        type="button"
+        class="theme-toggle"
+        id="theme-toggle"
+        aria-label="Toggle dark mode"
+        title="Toggle theme"
+      >
+        <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
+      <a
+        class="nav-cta nav-cta-ghost"
+        href="https://github.com/Abbhiishek/image-convertor"
+        target="_blank"
+        rel="noopener"
+        aria-label="PixelMorph on GitHub"
+      >GitHub</a>
       <a class="nav-cta nav-cta-primary" href="/#converter">Open Converter →</a>
     </div>
 
@@ -43,6 +64,11 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     <a href="/#formats">Formats</a>
     <a href="/about">About</a>
     <a href="/privacy">Privacy</a>
+    <button type="button" class="theme-toggle theme-toggle-mobile" id="theme-toggle-mobile" aria-label="Toggle dark mode">
+      <span class="theme-toggle-label">Theme</span>
+      <span class="theme-toggle-value" id="theme-toggle-value">Light</span>
+    </button>
+    <a href="https://github.com/Abbhiishek/image-convertor" target="_blank" rel="noopener">GitHub</a>
     <a href="/#converter" class="btn-primary-sm" style="justify-content:center;">Open Converter</a>
   </div>
 </header>
@@ -52,7 +78,7 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     position: sticky;
     top: 0;
     z-index: 50;
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: var(--color-nav-bg, rgba(255, 255, 255, 0.85));
     backdrop-filter: saturate(180%) blur(10px);
     -webkit-backdrop-filter: saturate(180%) blur(10px);
     border-bottom: 1px solid var(--color-hairline);
@@ -125,7 +151,32 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     color: var(--color-on-primary);
     text-decoration: none;
   }
-  .nav-cta-primary:hover { background-color: #2a2a2a; }
+  .nav-cta-primary:hover { background-color: var(--color-primary-hover, #2a2a2a); }
+
+  /* Theme toggle */
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background-color: transparent;
+    border: 1px solid var(--color-hairline);
+    color: var(--color-ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover {
+    background-color: var(--color-canvas-soft);
+    border-color: var(--color-hairline-strong);
+  }
+  /* Show sun in dark mode, moon in light mode */
+  .theme-toggle .icon-sun { display: none; }
+  .theme-toggle .icon-moon { display: inline-block; }
+  :global([data-theme="dark"]) .theme-toggle .icon-sun { display: inline-block; }
+  :global([data-theme="dark"]) .theme-toggle .icon-moon { display: none; }
   .nav-burger {
     display: none;
     flex-direction: column;
@@ -178,6 +229,30 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     padding: 12px 16px;
   }
 
+  .theme-toggle-mobile {
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--color-hairline);
+    padding: 14px 4px;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font: inherit;
+    font-size: 16px;
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+  .theme-toggle-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+  }
+
   @media (max-width: 860px) {
     .nav-links, .nav-ctas { display: none; }
     .nav-burger { display: flex; }
@@ -210,4 +285,21 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
   // Close if the viewport widens past the mobile breakpoint
   const mql = window.matchMedia("(min-width: 861px)");
   mql.addEventListener?.("change", (e) => { if (e.matches) close(); });
+
+  // Theme toggle — pairs with the FOUC-prevention script in Layout.astro
+  const themeLabel = (theme: string) => theme.charAt(0).toUpperCase() + theme.slice(1);
+  const currentTheme = () =>
+    document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const setTheme = (theme: "light" | "dark") => {
+    document.documentElement.setAttribute("data-theme", theme);
+    try { localStorage.setItem("pm-theme", theme); } catch (e) { /* ignore */ }
+    const mobileValue = document.getElementById("theme-toggle-value");
+    if (mobileValue) mobileValue.textContent = themeLabel(theme);
+  };
+  const toggleTheme = () => setTheme(currentTheme() === "dark" ? "light" : "dark");
+  document.getElementById("theme-toggle")?.addEventListener("click", toggleTheme);
+  document.getElementById("theme-toggle-mobile")?.addEventListener("click", toggleTheme);
+  // Sync mobile label on first paint
+  const mobileValue = document.getElementById("theme-toggle-value");
+  if (mobileValue) mobileValue.textContent = themeLabel(currentTheme());
 </script>

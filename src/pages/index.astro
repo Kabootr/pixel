@@ -10,18 +10,18 @@ import FAQ from "../components/FAQ.astro";
 import { productFaq, seoFaq, toFaqPageSchema } from "../lib/faqData.js";
 
 const title =
-  "Online Image Convertor — Free PNG, JPG, WebP, GIF, SVG, ICO & TIFF Converter";
+  "PixelMorph — Free PNG, JPG, WebP, GIF, SVG, ICO & TIFF Image Converter";
 const description =
-  "Free Online Image Convertor — convert PNG, JPG, WebP, GIF, SVG, ICO and TIFF in your browser. No uploads, no signup, no file-size limits. 100% private and instant.";
+  "PixelMorph — convert PNG, JPG, WebP, GIF, SVG, ICO and TIFF in your browser. No uploads, no signup, no file-size limits. 100% private and instant.";
 
-const siteUrl = "https://realonlineruler.com";
+const siteUrl = "https://pixelmorph.app";
 
 const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "Image Convertor",
-    alternateName: ["Online Image Convertor", "Online Image Converter"],
+    name: "PixelMorph",
+    alternateName: ["Image Converter", "Online Image Converter", "PixelMorph Image Converter"],
     url: `${siteUrl}/`,
     applicationCategory: "MultimediaApplication",
     applicationSubCategory: "Image Converter",
@@ -51,7 +51,7 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Image Convertor",
+    name: "PixelMorph",
     url: `${siteUrl}/`,
     description,
     potentialAction: {
@@ -63,7 +63,7 @@ const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Image Convertor",
+    name: "PixelMorph",
     url: `${siteUrl}/`,
     logo: `${siteUrl}/favicon.svg`,
   },
@@ -73,8 +73,8 @@ const jsonLd = [
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
   <Hero
-    eyebrow="Free Online Image Convertor · No upload · No limits"
-    title="Online Image Convertor — convert images, privately, in your browser."
+    eyebrow="Free · No upload · No limits"
+    title="PixelMorph — convert images, privately, in your browser."
     subtitle="Drop your images and pick a format. PNG, JPG, WebP, GIF, SVG, ICO, TIFF — every conversion happens locally. Your files never leave this page."
   >
     <Converter defaultTo="png" id="converter" />

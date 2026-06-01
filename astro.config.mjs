@@ -20,7 +20,7 @@ for (const f of FORMATS) {
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://realonlineruler.com',
+  site: 'https://pixelmorph.app',
   integrations: [
     sitemap({
       // Don't index the same-format redirect stubs.

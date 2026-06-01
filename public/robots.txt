@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://realonlineruler.com/sitemap-index.xml
+Sitemap: https://pixelmorph.app/sitemap-index.xml
