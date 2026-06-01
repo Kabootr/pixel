@@ -1,0 +1,122 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { FORMATS } from "../lib/formats.js";
+
+// A handful of popular doorway links to nudge users back into a useful flow.
+const suggestions = [
+  { from: "png", to: "jpg" },
+  { from: "jpg", to: "webp" },
+  { from: "png", to: "webp" },
+  { from: "webp", to: "png" },
+  { from: "svg", to: "png" },
+  { from: "png", to: "ico" },
+];
+---
+
+<Layout
+  title="Page not found — Image Convertor"
+  description="That page doesn't exist. Try the converter on the home page, or pick a common conversion below."
+  robots="noindex, follow"
+>
+  <section class="page-container nf-page">
+    <header class="nf-header">
+      <span class="t-caption-mono eyebrow">404</span>
+      <h1 class="t-display-xl">Page not found.</h1>
+      <p class="t-body-lg sub">
+        That URL doesn't match a converter we have. Same-format pairs (like <code>/png-to-png</code>) aren't real conversions — try one of these instead.
+      </p>
+      <div class="nf-actions">
+        <a class="btn-primary" href="/">Open the converter</a>
+        <a class="btn-secondary" href="/#formats">See all formats</a>
+      </div>
+    </header>
+
+    <div class="nf-suggest">
+      <span class="t-caption-mono eyebrow">Popular conversions</span>
+      <div class="nf-grid">
+        {suggestions.map((s) => {
+          const from = FORMATS.find((f) => f.id === s.from);
+          const to = FORMATS.find((f) => f.id === s.to);
+          if (!from || !to) return null;
+          return (
+            <a class="nf-card card elev-2" href={`/${from.id}-to-${to.id}`}>
+              <span class="nf-pair t-caption-mono">{from.label} → {to.label}</span>
+              <span class="t-display-sm">Convert {from.label} to {to.label}</span>
+              <span class="nf-arrow" aria-hidden="true">→</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .nf-page {
+    padding-block: 96px 32px;
+    max-width: 960px;
+  }
+  .nf-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    margin-bottom: 64px;
+  }
+  .eyebrow { color: var(--color-mute); }
+  .sub { color: var(--color-body); max-width: 580px; margin: 0; }
+  .sub code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background-color: var(--color-canvas-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .nf-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+
+  .nf-suggest {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .nf-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+  .nf-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--color-ink);
+    position: relative;
+    padding: 20px;
+    transition: transform 0.15s ease;
+  }
+  .nf-card:hover { transform: translateY(-2px); }
+  .nf-pair { color: var(--color-mute); }
+  .nf-arrow {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    color: var(--color-link);
+    font-size: 18px;
+  }
+
+  @media (max-width: 780px) {
+    .nf-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .nf-page { padding-block: 56px 24px; }
+    .nf-header { margin-bottom: 40px; }
+    .nf-actions .btn-primary,
+    .nf-actions .btn-secondary { flex: 1 1 auto; min-width: 140px; justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    .nf-grid { grid-template-columns: 1fr; }
+  }
+</style>

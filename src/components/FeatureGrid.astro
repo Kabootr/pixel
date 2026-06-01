@@ -1,0 +1,106 @@
+---
+const features = [
+  {
+    title: "Private by design.",
+    body:
+      "Every conversion happens inside your browser. Your images never touch our servers, our logs, or anyone else's.",
+    icon: "lock",
+  },
+  {
+    title: "No limits.",
+    body:
+      "No file size cap. No daily quota. No signup wall. Drop 5MB photos or 200MB design exports — it works the same.",
+    icon: "infinity",
+  },
+  {
+    title: "Genuinely fast.",
+    body:
+      "Skip the upload-wait-download dance. Browser-side conversion finishes in the time it'd take to upload one image to a competitor.",
+    icon: "bolt",
+  },
+];
+
+function iconSvg(name: string) {
+  const stroke = `fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"`;
+  switch (name) {
+    case "lock":
+      return `<svg viewBox="0 0 24 24" width="22" height="22" ${stroke}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+    case "infinity":
+      return `<svg viewBox="0 0 24 24" width="22" height="22" ${stroke}><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.739-8z"/></svg>`;
+    case "bolt":
+      return `<svg viewBox="0 0 24 24" width="22" height="22" ${stroke}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+    default:
+      return "";
+  }
+}
+---
+
+<section class="feature-band">
+  <div class="page-container">
+    <header class="feature-header">
+      <span class="t-caption-mono eyebrow">Why this exists</span>
+      <h2 class="t-display-lg">Built for people who don't want to upload their photos.</h2>
+      <p class="t-body-lg sub">
+        The other free converters route your images through a server farm. We do the work where it belongs — on your machine, in your browser, in milliseconds.
+      </p>
+    </header>
+
+    <div class="feature-grid">
+      {features.map((f) => (
+        <article class="feature-card card elev-3">
+          <span class="feature-icon" aria-hidden="true" set:html={iconSvg(f.icon)}></span>
+          <h3 class="t-display-sm">{f.title}</h3>
+          <p class="t-body-md feature-body">{f.body}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .feature-band {
+    padding: 96px 0 0;
+  }
+  .feature-header {
+    max-width: 720px;
+    margin: 0 auto 48px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  .eyebrow { color: var(--color-mute); }
+  .sub { color: var(--color-body); margin: 0; }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .feature-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .feature-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background-color: var(--color-canvas-soft);
+    color: var(--color-ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  .feature-body { color: var(--color-body); margin: 0; }
+
+  @media (max-width: 860px) {
+    .feature-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    .feature-band { padding-top: 56px; }
+    .feature-header { margin-bottom: 32px; gap: 12px; }
+  }
+</style>

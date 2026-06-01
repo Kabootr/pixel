@@ -1,0 +1,246 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import Converter from "../components/Converter.astro";
+import FAQ from "../components/FAQ.astro";
+import { getAllConversionPairs, getFormat } from "../lib/formats.js";
+
+export async function getStaticPaths() {
+  return getAllConversionPairs().map(({ from, to, slug }) => ({
+    params: { converter: slug },
+    props: { from, to },
+  }));
+}
+
+const { from, to } = Astro.props;
+
+const title = `${from.label} to ${to.label} Converter — Free Online Image Convertor`;
+const description = `Free Online Image Convertor for ${from.label} to ${to.label}. Convert ${from.label} files to ${to.label} in your browser — no upload, no signup, no file-size limit. 100% private and instant.`;
+const keywords = [
+  `${from.label.toLowerCase()} to ${to.label.toLowerCase()} converter`,
+  `${from.label.toLowerCase()} to ${to.label.toLowerCase()}`,
+  `convert ${from.label.toLowerCase()} to ${to.label.toLowerCase()}`,
+  `${from.label.toLowerCase()} to ${to.label.toLowerCase()} online`,
+  `free ${from.label.toLowerCase()} to ${to.label.toLowerCase()} converter`,
+  `${from.label.toLowerCase()} to ${to.label.toLowerCase()} no upload`,
+  `online image convertor`,
+  `online image converter`,
+  `${from.label.toLowerCase()} converter`,
+  `${to.label.toLowerCase()} converter`,
+  `image format converter`,
+  `batch ${from.label.toLowerCase()} to ${to.label.toLowerCase()}`,
+].join(", ");
+
+const siteUrl = "https://realonlineruler.com";
+const pageUrl = `${siteUrl}/${from.id}-to-${to.id}`;
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: `${from.label} to ${to.label} Converter`,
+    alternateName: `Online ${from.label} to ${to.label} Convertor`,
+    url: pageUrl,
+    applicationCategory: "MultimediaApplication",
+    applicationSubCategory: "Image Converter",
+    operatingSystem: "Any (browser-based)",
+    description,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      `Convert ${from.label} to ${to.label} in your browser`,
+      "No upload, no signup, no file-size limit",
+      "Batch conversion with ZIP download",
+      "100% private — client-side processing",
+    ],
+    browserRequirements: "Requires a modern browser with Canvas API support",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: `How to convert ${from.label} to ${to.label} online for free`,
+    description: `Convert ${from.label} files to ${to.label} in your browser using a free Online Image Convertor. No upload required.`,
+    totalTime: "PT10S",
+    supply: [{ "@type": "HowToSupply", name: `${from.label} image file` }],
+    tool: [{ "@type": "HowToTool", name: "Modern web browser" }],
+    step: [
+      {
+        "@type": "HowToStep",
+        name: `Drop your ${from.label} file`,
+        text: `Drag-drop, click to browse, or paste a ${from.label} file from the clipboard. You can add as many files as you want at once.`,
+      },
+      {
+        "@type": "HowToStep",
+        name: `Select ${to.label} as the target format`,
+        text: `Tap the ${to.label} pill. Open Advanced Settings if you want to tune quality, resize, or change the background colour.`,
+      },
+      {
+        "@type": "HowToStep",
+        name: `Download the converted ${to.label}`,
+        text: `Click Convert. Save the resulting ${to.label} file, or grab the whole batch as a single ZIP.`,
+      },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Online Image Convertor",
+        item: `${siteUrl}/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: `${from.label} to ${to.label}`,
+        item: pageUrl,
+      },
+    ],
+  },
+];
+---
+
+<Layout title={title} description={description} keywords={keywords} jsonLd={jsonLd}>
+  <Hero
+    eyebrow={`${from.label} → ${to.label}`}
+    title={`Convert ${from.label} to ${to.label}.`}
+    subtitle={`Drop a ${from.label} (or many) and we'll convert each one to ${to.label} right here in your browser. ${to.blurb}`}
+    compact={true}
+  >
+    <Converter defaultTo={to.id} defaultFrom={from.id} id="converter" />
+  </Hero>
+
+  <section class="explainer page-container">
+    <div class="explainer-grid">
+      <article class="explainer-card card-lg elev-2">
+        <span class="t-caption-mono explainer-eyebrow">About {from.label}</span>
+        <h2 class="t-display-md">{from.tagline}</h2>
+        <p class="t-body-md">{from.blurb}</p>
+        <ul class="explainer-list">
+          {from.pros.map((p) => (
+            <li class="t-body-sm"><span class="dot good" aria-hidden="true">+</span>{p}</li>
+          ))}
+          {from.cons.map((c) => (
+            <li class="t-body-sm"><span class="dot bad" aria-hidden="true">−</span>{c}</li>
+          ))}
+        </ul>
+      </article>
+
+      <article class="explainer-card card-lg elev-2">
+        <span class="t-caption-mono explainer-eyebrow">About {to.label}</span>
+        <h2 class="t-display-md">{to.tagline}</h2>
+        <p class="t-body-md">{to.blurb}</p>
+        <ul class="explainer-list">
+          {to.pros.map((p) => (
+            <li class="t-body-sm"><span class="dot good" aria-hidden="true">+</span>{p}</li>
+          ))}
+          {to.cons.map((c) => (
+            <li class="t-body-sm"><span class="dot bad" aria-hidden="true">−</span>{c}</li>
+          ))}
+        </ul>
+      </article>
+    </div>
+
+    <div class="why-band">
+      <h3 class="t-display-md">Why convert {from.label} to {to.label}?</h3>
+      <p class="t-body-md">
+        {from.id === "png" && to.id === "jpg" && "Photographs saved as PNG balloon to 5–10× the size they'd be as JPG. If your image is a photo (not a logo or screenshot with sharp edges), JPG will dramatically cut file size with no perceptible quality loss at 88–92% quality."}
+        {from.id === "jpg" && to.id === "png" && "JPG strips transparency and softens sharp edges with compression. PNG keeps both — useful when you need to layer the image, sample exact pixel values, or hand it off for further editing."}
+        {from.id === "png" && to.id === "webp" && "WebP gives you PNG-class quality (including alpha transparency) at roughly 30% smaller file sizes. Every modern browser supports it."}
+        {from.id === "jpg" && to.id === "webp" && "WebP at the same visual quality is typically 25–35% smaller than JPG. For sites where page weight matters, it's almost always the right swap."}
+        {from.id === "webp" && to.id === "png" && "PNG is the right pick when a tool downstream doesn't read WebP yet, or when you need a lossless intermediate for further editing."}
+        {from.id === "webp" && to.id === "jpg" && "JPG is universally supported by old software, design tools, and printers. If a downstream tool refuses your WebP, this is the way."}
+        {to.id === "ico" && "Favicons live in ICO files. Browsers will fall back to ICO when other favicon hints fail, so it's still the safest bet for /favicon.ico."}
+        {to.id === "svg" && "Wrapping a raster image inside an SVG can be useful when a CMS only accepts SVG uploads, or when you want to embed the image in inline-SVG markup."}
+        {from.id === "svg" && "Rasterizing an SVG produces a fixed-resolution pixel image, which is what most photo viewers, social platforms, and image-editing tools expect."}
+        {to.id === "tiff" && "TIFF is the lossless standard for print and archival. Convert when handing off to a print shop or a long-term archive."}
+        {from.id === "tiff" && "Browsers and most everyday tools don't render TIFF natively. Converting to PNG/JPG/WebP makes the image usable on the web."}
+        {from.id === "gif" && "Most static GIFs you encounter are oversized for what they show. Re-encoding to PNG (for transparency) or WebP (for size) is usually a clear win."}
+        {to.id === "gif" && "GIF is still the path of least resistance for short, lightweight animations that need to play in any embed context."}
+        {from.id !== to.id && !["png-jpg","png-webp","jpg-png","jpg-webp","webp-png","webp-jpg"].includes(`${from.id}-${to.id}`) && `Different formats trade off size, fidelity, and compatibility differently. ${to.label} is the right choice when you need ${to.tagline.toLowerCase().replace(/\.$/, "")}, while ${from.label} brings ${from.tagline.toLowerCase().replace(/\.$/, "")}.`}
+      </p>
+      <a href="/#formats" class="why-link">See all supported formats →</a>
+    </div>
+  </section>
+
+  <FAQ />
+</Layout>
+
+<style>
+  .explainer {
+    padding-top: 32px;
+  }
+  .explainer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .explainer-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .explainer-eyebrow { color: var(--color-mute); }
+  .explainer-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .explainer-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--color-body);
+  }
+  .dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .dot.good { background-color: rgba(10, 138, 62, 0.12); color: #0a8a3e; }
+  .dot.bad { background-color: rgba(238, 0, 0, 0.08); color: var(--color-error); }
+
+  .why-band {
+    margin-top: 32px;
+    padding: 32px;
+    background-color: var(--color-canvas-soft);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-hairline);
+  }
+  .explainer-card { min-width: 0; }
+  .why-band h3 { margin: 0 0 12px; }
+  .why-band p {
+    color: var(--color-body);
+    max-width: 720px;
+    margin: 0 0 16px;
+  }
+  .why-link {
+    color: var(--color-ink);
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.15s ease;
+  }
+  .why-link:hover { gap: 10px; color: var(--color-link); }
+
+  @media (max-width: 760px) {
+    .explainer-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .explainer { padding-top: 24px; }
+    .why-band { padding: 20px; margin-top: 24px; }
+  }
+</style>

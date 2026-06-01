@@ -1,0 +1,123 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Privacy — Online Image Convertor (We Don't See Your Images)"
+  description="Privacy summary for our Online Image Convertor. Your image files never leave your browser — plain-language summary of what we do and don't collect."
+  keywords="online image convertor privacy, image converter privacy, private image converter, no upload converter privacy"
+  robots="index, follow"
+>
+  <section class="page-container privacy-page">
+    <header class="privacy-header">
+      <span class="t-caption-mono eyebrow">Privacy</span>
+      <h1 class="t-display-xl">Privacy summary.</h1>
+      <p class="t-body-lg sub">
+        The short version: your image data stays on your device.
+      </p>
+    </header>
+
+    <div class="tl-dr card-lg elev-2">
+      <h2 class="t-display-sm">TL;DR</h2>
+      <ul>
+        <li><strong>Your image files never leave your browser.</strong> Conversion happens locally using the Canvas API.</li>
+        <li><strong>We don't have accounts.</strong> So we can't link any activity to a person.</li>
+        <li><strong>We use Google Analytics</strong> for aggregate page-view statistics (anonymized IP). It does not see your image data.</li>
+        <li><strong>No first-party cookies.</strong> Aside from Google Analytics' own cookies, we set none.</li>
+      </ul>
+    </div>
+
+    <div class="privacy-body">
+      <h2 class="t-display-md">What we collect</h2>
+      <p class="t-body-md">
+        We use Google Analytics 4 with IP anonymization enabled. This gives us aggregate, anonymous statistics about page views, browser/OS distribution, and which converter pages get used. We do not collect, transmit, or store the contents of any image you process. Image processing happens entirely in your browser via JavaScript.
+      </p>
+
+      <h2 class="t-display-md">What Google Analytics sees</h2>
+      <p class="t-body-md">
+        GA receives the standard browser metadata: page URL, anonymized IP, browser user-agent, referrer. It does <em>not</em> receive file names, file sizes, or anything about the image data you convert.
+      </p>
+
+      <h2 class="t-display-md">Opting out</h2>
+      <p class="t-body-md">
+        Standard browser-level Do Not Track or any privacy extension that blocks <code>googletagmanager.com</code> will fully exclude you from analytics with no impact on the converter's functionality.
+      </p>
+
+      <h2 class="t-display-md">Contact</h2>
+      <p class="t-body-md">
+        Questions about this page? <a href="mailto:hi@realonlineruler.com">hi@realonlineruler.com</a>.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .privacy-page {
+    padding-block: 64px 32px;
+    max-width: 800px;
+  }
+  .privacy-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 640px) {
+    .privacy-page { padding-block: 40px 24px; }
+    .tl-dr { margin-bottom: 24px; }
+    .privacy-body h2 { margin-top: 8px; }
+  }
+  .eyebrow { color: var(--color-mute); }
+  .sub { color: var(--color-body); max-width: 580px; margin: 0; }
+
+  .tl-dr {
+    background-color: var(--color-canvas-soft);
+    margin-bottom: 32px;
+  }
+  .tl-dr h2 { margin: 0 0 12px; }
+  .tl-dr ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tl-dr li {
+    color: var(--color-body);
+    padding-left: 28px;
+    position: relative;
+  }
+  .tl-dr li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background-color: rgba(10, 138, 62, 0.12);
+    color: #0a8a3e;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tl-dr strong { color: var(--color-ink); }
+
+  .privacy-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .privacy-body h2 { margin: 16px 0 4px; }
+  .privacy-body p { color: var(--color-body); margin: 0; max-width: 720px; }
+  .privacy-body a { color: var(--color-link); }
+  .privacy-body code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background-color: var(--color-canvas-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+</style>

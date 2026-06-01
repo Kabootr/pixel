@@ -1,23 +1,129 @@
+---
+import "../styles/global.css";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogImage?: string;
+  keywords?: string;
+  robots?: string;
+  /** Optional JSON-LD schema object or array — injected as <script type="application/ld+json"> */
+  jsonLd?: object | object[];
+  /** Show / hide the global nav (useful for embed modes — default true) */
+  showNav?: boolean;
+}
+
+const {
+  title = "Online Image Convertor — Free, Private, In-Browser Image Converter",
+  description = "Free Online Image Convertor — convert PNG, JPG, WebP, GIF, SVG, ICO and TIFF in your browser. No uploads, no signup, no limits. 100% private and instant.",
+  canonical,
+  ogImage = "/og.png",
+  keywords = "image convertor, online image convertor, image converter, online image converter, free image convertor, free image converter, png image convertor, jpeg image convertor, jpg image convertor, svg image convertor, vector image convertor, high resolution image convertor, 4k image convertor, web image convertor tool, image convertor to jpg, image convertor to jpeg, image convertor to png, image convertor to webp, image format converter, png to jpg, jpg to png, png to webp, jpg to webp, webp to png, webp to jpg, svg to png, png to svg, tiff to jpg, png to ico, ico converter, favicon generator, batch image converter, bulk image converter, browser image converter, no upload image converter, private image converter, convert image online, change image format, client side image converter",
+  robots = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+  jsonLd,
+  showNav = true,
+} = Astro.props;
+
+const canonicalUrl = canonical
+  ? new URL(canonical, Astro.site).toString()
+  : new URL(Astro.url.pathname, Astro.site).toString();
+
+const ogImageUrl = new URL(ogImage, Astro.site).toString();
+const jsonLdArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+
+// Set GA_ID in env or leave the placeholder
+const GA_ID = "G-XXXXXXXXXX";
+// Set this once verified via Google Search Console
+const GOOGLE_SITE_VERIFICATION = "";
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="generator" content={Astro.generator} />
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="robots" content={robots} />
+    <meta name="googlebot" content={robots} />
+    <meta name="author" content="Image Convertor" />
+    <meta name="application-name" content="Image Convertor" />
+    <link rel="canonical" href={canonicalUrl} />
+    {GOOGLE_SITE_VERIFICATION && (
+      <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />
+    )}
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:secure_url" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:site_name" content="Image Convertor" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={title} />
+    <meta name="twitter:url" content={canonicalUrl} />
+    <meta name="twitter:domain" content="realonlineruler.com" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="mask-icon" href="/favicon.svg" color="#7928ca" />
+
+    <!-- Hreflang (English-only single locale) -->
+    <link rel="alternate" hreflang="en" href={canonicalUrl} />
+    <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+
+    <!-- Fonts: Geist + Geist Mono (Google Fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+    />
+
+    <!-- Theme color -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="msapplication-TileColor" content="#7928ca" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- JSON-LD structured data -->
+    {jsonLdArray.map((schema) => (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
+
+    <!-- Google Analytics (replace G-XXXXXXXXXX with your real GA4 ID) -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+    <script is:inline define:vars={{ GA_ID }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', GA_ID, { anonymize_ip: true });
+    </script>
+  </head>
+  <body>
+    {showNav && <Nav />}
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

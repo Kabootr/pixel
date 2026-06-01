@@ -1,0 +1,213 @@
+---
+const pathname = Astro.url.pathname;
+const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
+---
+
+<header class="nav-root">
+  <div class="page-container nav-inner">
+    <a href="/" class="brand" aria-label="Image Convertor home">
+      <span class="brand-mark" aria-hidden="true">
+        <!-- Tiny mesh-gradient logo mark -->
+        <svg viewBox="0 0 32 32" width="22" height="22">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#007cf0" />
+              <stop offset="50%" stop-color="#7928ca" />
+              <stop offset="100%" stop-color="#ff0080" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="28" height="28" rx="7" fill="url(#g1)" />
+          <path d="M10 21 L14 14 L18 19 L22 11" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        </svg>
+      </span>
+      <span class="brand-name">Image Convertor</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a class:list={["nav-link", isActive("/formats") && "is-active"]} href="/#formats">Formats</a>
+      <a class:list={["nav-link", isActive("/about") && "is-active"]} href="/about">About</a>
+      <a class:list={["nav-link", isActive("/privacy") && "is-active"]} href="/privacy">Privacy</a>
+    </nav>
+
+    <div class="nav-ctas">
+      <a class="nav-cta nav-cta-ghost" href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav-cta nav-cta-primary" href="/#converter">Open Converter →</a>
+    </div>
+
+    <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="nav-mobile" id="nav-mobile" hidden>
+    <a href="/#formats">Formats</a>
+    <a href="/about">About</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/#converter" class="btn-primary-sm" style="justify-content:center;">Open Converter</a>
+  </div>
+</header>
+
+<style>
+  .nav-root {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    gap: 16px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-ink);
+    text-decoration: none;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    justify-content: center;
+  }
+  .nav-link {
+    color: var(--color-body);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 20px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+  .nav-link:hover {
+    color: var(--color-ink);
+    background-color: var(--color-canvas-soft);
+  }
+  .nav-link.is-active { color: var(--color-ink); }
+  .nav-ctas {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-cta-ghost {
+    color: var(--color-ink);
+    text-decoration: none;
+    border: 1px solid var(--color-hairline);
+  }
+  .nav-cta-ghost:hover {
+    background-color: var(--color-canvas-soft);
+    border-color: var(--color-hairline-strong);
+  }
+  .nav-cta-primary {
+    background-color: var(--color-ink);
+    color: var(--color-on-primary);
+    text-decoration: none;
+  }
+  .nav-cta-primary:hover { background-color: #2a2a2a; }
+  .nav-burger {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .nav-burger span {
+    display: block;
+    width: 16px;
+    height: 1.5px;
+    background-color: var(--color-ink);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .nav-burger[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(5.5px) rotate(45deg);
+  }
+  .nav-burger[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-burger[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-5.5px) rotate(-45deg);
+  }
+  .nav-mobile {
+    display: none;
+    flex-direction: column;
+    padding: 8px 16px 20px;
+    gap: 4px;
+    background-color: var(--color-canvas);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .nav-mobile a {
+    color: var(--color-ink);
+    text-decoration: none;
+    padding: 14px 4px;
+    font-size: 16px;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .nav-mobile a:last-child {
+    border-bottom: none;
+    margin-top: 12px;
+    padding: 12px 16px;
+  }
+
+  @media (max-width: 860px) {
+    .nav-links, .nav-ctas { display: none; }
+    .nav-burger { display: flex; }
+    .nav-mobile.is-open { display: flex; }
+  }
+  @media (max-width: 380px) {
+    .brand-name { font-size: 14px; }
+  }
+</style>
+
+<script>
+  const burger = document.getElementById("nav-burger");
+  const mobile = document.getElementById("nav-mobile");
+  const close = () => {
+    mobile?.classList.remove("is-open");
+    burger?.setAttribute("aria-expanded", "false");
+    if (mobile) mobile.hidden = true;
+  };
+  burger?.addEventListener("click", () => {
+    const open = mobile?.classList.toggle("is-open");
+    burger.setAttribute("aria-expanded", String(open));
+    if (mobile) mobile.hidden = !open;
+  });
+  // Close menu when an in-page link is tapped
+  mobile?.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
+  // Close on Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+  // Close if the viewport widens past the mobile breakpoint
+  const mql = window.matchMedia("(min-width: 861px)");
+  mql.addEventListener?.("change", (e) => { if (e.matches) close(); });
+</script>

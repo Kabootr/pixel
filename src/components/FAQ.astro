@@ -1,0 +1,95 @@
+---
+import { productFaq } from "../lib/faqData.js";
+
+interface FaqItem { q: string; a: string }
+interface Props {
+  items?: FaqItem[];
+  eyebrow?: string;
+  title?: string;
+}
+
+const {
+  items = productFaq,
+  eyebrow = "Questions we get",
+  title = "Real answers, no upsells.",
+} = Astro.props;
+---
+
+<section class="faq-band">
+  <div class="page-container">
+    <header class="faq-header">
+      <span class="t-caption-mono eyebrow">{eyebrow}</span>
+      <h2 class="t-display-lg">{title}</h2>
+    </header>
+
+    <div class="faq-list">
+      {items.map((item) => (
+        <details class="faq-item card elev-2">
+          <summary class="faq-q">
+            <span class="t-display-sm">{item.q}</span>
+            <span class="faq-toggle" aria-hidden="true">+</span>
+          </summary>
+          <p class="t-body-md faq-a">{item.a}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq-band { padding: 96px 0 0; }
+  .faq-header {
+    max-width: 720px;
+    margin: 0 auto 48px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  .eyebrow { color: var(--color-mute); }
+  .faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .faq-item {
+    padding: 20px 24px;
+    background-color: var(--color-canvas);
+  }
+  .faq-q {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .faq-q::-webkit-details-marker { display: none; }
+  .faq-q .t-display-sm {
+    text-align: left;
+    flex: 1;
+  }
+  .faq-toggle {
+    font-family: var(--font-mono);
+    color: var(--color-mute);
+    font-size: 20px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+  .faq-item[open] .faq-toggle { transform: rotate(45deg); }
+  .faq-a {
+    color: var(--color-body);
+    margin: 12px 0 0;
+    max-width: 680px;
+  }
+
+  @media (max-width: 600px) {
+    .faq-band { padding-top: 56px; }
+    .faq-header { margin-bottom: 32px; gap: 12px; }
+    .faq-item { padding: 16px 18px; }
+    .faq-q .t-display-sm { font-size: 17px; line-height: 1.35; }
+  }
+</style>

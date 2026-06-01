@@ -1,0 +1,104 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  subtitle: string;
+  /** Optional smaller compact mode for SEO doorway pages */
+  compact?: boolean;
+}
+
+const {
+  eyebrow = "Free · No upload · No limit",
+  title,
+  subtitle,
+  compact = false,
+} = Astro.props;
+---
+
+<section class:list={["hero", compact && "is-compact"]}>
+  <div class="hero-mesh mesh-gradient" aria-hidden="true"></div>
+  <div class="hero-fade" aria-hidden="true"></div>
+
+  <div class="page-container hero-inner">
+    <span class="chip" aria-label={eyebrow}>
+      <span class="chip-dot" aria-hidden="true"></span>
+      {eyebrow}
+    </span>
+    <h1 class="t-display-xl hero-title">{title}</h1>
+    <p class="t-body-lg hero-sub">{subtitle}</p>
+
+    <slot />
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: 80px 0 32px;
+  }
+  .hero.is-compact { padding: 48px 0 24px; }
+  .hero :global(.chip) {
+    max-width: 100%;
+  }
+
+  .hero-mesh {
+    position: absolute;
+    inset: -10% -5% 30% -5%;
+    z-index: 0;
+    filter: blur(80px) saturate(110%);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .hero-fade {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.6) 60%, rgba(255,255,255,1) 100%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+  }
+  .hero-title {
+    margin: 4px 0 0;
+    max-width: 880px;
+  }
+  .hero-sub {
+    margin: 0;
+    color: var(--color-body);
+    max-width: 640px;
+  }
+  .chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--color-grad-develop-start), var(--color-grad-preview-end));
+    display: inline-block;
+  }
+
+  /* When a Converter slot follows, give it breathing room */
+  .hero-inner > :global(*:not(.chip):not(.hero-title):not(.hero-sub)) {
+    margin-top: 32px;
+    width: 100%;
+  }
+
+  /* When a Converter slot follows, give it less margin on mobile */
+  @media (max-width: 640px) {
+    .hero { padding: 48px 0 20px; }
+    .hero.is-compact { padding: 32px 0 16px; }
+    .hero-inner { gap: 14px; }
+    .hero-inner > :global(*:not(.chip):not(.hero-title):not(.hero-sub)) {
+      margin-top: 24px;
+    }
+  }
+  @media (max-width: 380px) {
+    .hero { padding: 36px 0 16px; }
+  }
+</style>

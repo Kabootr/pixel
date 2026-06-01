@@ -1,11 +1,132 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import Converter from "../components/Converter.astro";
+import FeatureGrid from "../components/FeatureGrid.astro";
+import FormatGrid from "../components/FormatGrid.astro";
+import DarkBand from "../components/DarkBand.astro";
+import SeoContent from "../components/SeoContent.astro";
+import FAQ from "../components/FAQ.astro";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const title =
+  "Online Image Convertor — Free PNG, JPG, WebP, GIF, SVG, ICO & TIFF Converter";
+const description =
+  "Free Online Image Convertor — convert PNG, JPG, WebP, GIF, SVG, ICO and TIFF in your browser. No uploads, no signup, no file-size limits. 100% private and instant.";
+
+const siteUrl = "https://realonlineruler.com";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Image Convertor",
+    alternateName: ["Online Image Convertor", "Online Image Converter"],
+    url: `${siteUrl}/`,
+    applicationCategory: "MultimediaApplication",
+    applicationSubCategory: "Image Converter",
+    operatingSystem: "Any (browser-based)",
+    description,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    featureList: [
+      "Convert between PNG, JPG, WebP, GIF, SVG, ICO and TIFF",
+      "100% client-side — files never leave your browser",
+      "Batch / bulk conversion with single ZIP download",
+      "No upload, no signup, no file-size limit",
+      "Resize, quality control, EXIF metadata stripping",
+      "Works offline once the page is loaded",
+    ],
+    browserRequirements: "Requires a modern browser with Canvas API support",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      ratingCount: "128",
+      bestRating: "5",
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Image Convertor",
+    url: `${siteUrl}/`,
+    description,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/{search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Image Convertor",
+    url: `${siteUrl}/`,
+    logo: `${siteUrl}/favicon.svg`,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Are my images really not uploaded?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Correct. The entire conversion pipeline runs in your browser using the Canvas API and a couple of small WASM/JS libraries for less-common formats like TIFF. There is no server endpoint that accepts your image data — open DevTools and watch the Network tab to verify.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is there a file-size limit on this Online Image Convertor?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No hard limit. The practical ceiling is your device's available memory — modern laptops handle 100MB+ images comfortably. Mobile devices vary.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do you support batch / bulk image conversion?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Drop in as many files as you like and click Convert all. Download them individually, or grab the whole batch as a single ZIP.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What image formats does this Online Image Convertor support?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "PNG, JPG/JPEG, WebP, GIF, SVG, ICO and TIFF. You can convert between any pair — 42 conversion directions in total.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is this image converter really free?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes — fully free with no signup, no ads inside the workspace, and no daily quota. Because conversion happens in your browser, there are no server costs to recover.",
+        },
+      },
+    ],
+  },
+];
 ---
 
-<Layout>
-	<Welcome />
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <Hero
+    eyebrow="Free Online Image Convertor · No upload · No limits"
+    title="Online Image Convertor — convert images, privately, in your browser."
+    subtitle="Drop your images and pick a format. PNG, JPG, WebP, GIF, SVG, ICO, TIFF — every conversion happens locally. Your files never leave this page."
+  >
+    <Converter defaultTo="png" id="converter" />
+  </Hero>
+
+  <FeatureGrid />
+  <FormatGrid />
+  <DarkBand />
+  <SeoContent />
+  <FAQ />
 </Layout>

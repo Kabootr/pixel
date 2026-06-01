@@ -1,0 +1,842 @@
+---
+import { FORMATS } from "../lib/formats.js";
+
+interface Props {
+  defaultTo?: string;
+  /** If set, hint copy adapts to "from → to" mode */
+  defaultFrom?: string;
+  /** Unique id so multiple converters can coexist on a page */
+  id?: string;
+}
+
+const { defaultTo = "png", defaultFrom, id = "converter" } = Astro.props;
+---
+
+<section id={id} class="converter">
+  <div class="converter-shell card-lg elev-4">
+    <!-- Drop zone -->
+    <div
+      class="drop-zone"
+      id={`${id}-drop`}
+      role="button"
+      tabindex="0"
+      aria-label="Drop images here, or click to choose files"
+    >
+      <div class="drop-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </div>
+      <h3 class="t-display-sm">Drop images here</h3>
+      <p class="t-body-sm drop-sub">
+        or <span class="link-like">browse</span> — supports {FORMATS.map(f => f.label).join(", ")}
+      </p>
+      <p class="t-caption-mono drop-meta">
+        100% client-side · no uploads · no size limit
+      </p>
+      <input
+        type="file"
+        id={`${id}-input`}
+        multiple
+        accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.ico,.tif,.tiff,image/*"
+        hidden
+      />
+    </div>
+
+    <!-- Controls — shown once at least one file is added -->
+    <div class="controls" id={`${id}-controls`} hidden>
+      <div class="controls-row">
+        <label class="control-label t-caption-mono">Convert to</label>
+        <div class="format-pills" role="radiogroup" aria-label="Target format">
+          {FORMATS.map((f) => (
+            <button
+              type="button"
+              class="format-pill"
+              data-format={f.id}
+              role="radio"
+              aria-pressed={f.id === defaultTo ? "true" : "false"}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <details class="settings-details" id={`${id}-settings`}>
+        <summary class="settings-summary">
+          <span class="t-body-sm-strong">Advanced settings</span>
+          <span class="t-caption-mono settings-hint">quality · resize · background</span>
+        </summary>
+
+        <div class="settings-grid">
+          <div class="setting">
+            <label class="t-body-sm setting-label" for={`${id}-quality`}>
+              Quality
+              <span class="quality-value" id={`${id}-quality-value`}>92</span>
+            </label>
+            <input
+              type="range"
+              id={`${id}-quality`}
+              class="range"
+              min="10"
+              max="100"
+              value="92"
+              step="1"
+            />
+            <p class="t-caption-mono setting-help">For JPG / WebP / GIF only.</p>
+          </div>
+
+          <div class="setting">
+            <label class="t-body-sm setting-label">Resize</label>
+            <div class="resize-row">
+              <select class="input resize-mode" id={`${id}-resize-mode`}>
+                <option value="none">No resize</option>
+                <option value="percent">By percent</option>
+                <option value="px">By pixels</option>
+              </select>
+              <input
+                type="number"
+                class="input resize-percent"
+                id={`${id}-resize-percent`}
+                min="1"
+                max="500"
+                value="100"
+                placeholder="%"
+                hidden
+              />
+              <input
+                type="number"
+                class="input resize-w"
+                id={`${id}-resize-w`}
+                min="1"
+                placeholder="W (px)"
+                hidden
+              />
+              <input
+                type="number"
+                class="input resize-h"
+                id={`${id}-resize-h`}
+                min="1"
+                placeholder="H (px)"
+                hidden
+              />
+            </div>
+          </div>
+
+          <div class="setting">
+            <label class="t-body-sm setting-label" for={`${id}-bg`}>
+              Background
+              <span class="t-caption-mono setting-hint">JPG only</span>
+            </label>
+            <div class="bg-row">
+              <input
+                type="color"
+                id={`${id}-bg`}
+                value="#ffffff"
+                class="color-swatch"
+              />
+              <span class="t-body-sm bg-name" id={`${id}-bg-name`}>White (#ffffff)</span>
+            </div>
+            <p class="t-caption-mono setting-help">Fills transparency when converting to JPG.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- File list -->
+    <ul class="file-list" id={`${id}-list`} aria-live="polite"></ul>
+
+    <!-- Footer action bar -->
+    <div class="action-bar" id={`${id}-actions`} hidden>
+      <button type="button" class="btn-secondary-sm" id={`${id}-clear`}>
+        Clear all
+      </button>
+      <div class="action-spacer"></div>
+      <button type="button" class="btn-secondary-sm" id={`${id}-add-more`}>
+        + Add more
+      </button>
+      <button type="button" class="btn-primary" id={`${id}-convert-all`}>
+        <span class="btn-label">Convert all</span>
+      </button>
+      <button type="button" class="btn-primary" id={`${id}-download-zip`} hidden>
+        Download ZIP
+      </button>
+    </div>
+  </div>
+
+  <p class="t-body-sm reassurance">
+    <strong>Your files never leave this page.</strong> All conversion happens in your browser — no uploads, no servers, no tracking of file contents.
+  </p>
+</section>
+
+<style>
+  .converter {
+    width: 100%;
+    max-width: 920px;
+    margin-inline: auto;
+  }
+  .converter-shell {
+    background-color: var(--color-canvas);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+  }
+
+  .drop-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background-color: var(--color-canvas);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-ink);
+    margin-bottom: 16px;
+    border: 1px solid var(--color-hairline);
+    flex-shrink: 0;
+  }
+  .drop-sub {
+    color: var(--color-body);
+    margin: 8px 0 6px;
+  }
+  .drop-meta {
+    color: var(--color-mute);
+    margin-top: 8px;
+  }
+  .link-like {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .controls {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .controls-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .control-label {
+    color: var(--color-mute);
+  }
+  .format-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .format-pill {
+    flex: 0 0 auto;
+  }
+
+  .settings-details {
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas-soft);
+  }
+  .settings-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    user-select: none;
+    flex-wrap: wrap;
+  }
+  .settings-summary::-webkit-details-marker { display: none; }
+  .settings-summary::after {
+    content: "+";
+    font-family: var(--font-mono);
+    color: var(--color-mute);
+    transition: transform 0.2s ease;
+    font-size: 18px;
+  }
+  .settings-details[open] .settings-summary::after { content: "−"; }
+  .settings-hint { color: var(--color-mute); }
+  .t-body-sm-strong { font-weight: 500; font-size: 14px; line-height: 20px; }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    padding: 8px 16px 20px;
+  }
+  .setting { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .setting-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--color-ink);
+    font-weight: 500;
+    flex-wrap: wrap;
+  }
+  .setting-help { color: var(--color-mute); }
+  .quality-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-body);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+  }
+  .resize-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .resize-row .input { flex: 1 1 calc(50% - 4px); min-width: 0; }
+  .resize-row .resize-mode { flex: 1 1 100%; }
+  .bg-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 44px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm);
+    background: none;
+    cursor: pointer;
+  }
+  .bg-name { color: var(--color-body); font-family: var(--font-mono); font-size: 12px; }
+
+  .file-list {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .file-list:empty { margin-top: 0; }
+
+  :global(.file-row) {
+    display: grid;
+    grid-template-columns: 56px 1fr auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas);
+  }
+  :global(.file-thumb) {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background-color: var(--color-canvas-soft-2);
+    background-image: linear-gradient(45deg, var(--color-canvas-soft-2) 25%, transparent 25%), linear-gradient(-45deg, var(--color-canvas-soft-2) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--color-canvas-soft-2) 75%), linear-gradient(-45deg, transparent 75%, var(--color-canvas-soft-2) 75%);
+    background-size: 12px 12px;
+    background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+    background-color: var(--color-canvas);
+  }
+  :global(.file-meta) { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  :global(.file-name) {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :global(.file-info) {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-mute);
+    letter-spacing: 0.02em;
+  }
+  :global(.file-info .saved) { color: #0a8a3e; font-weight: 500; }
+  :global(.file-info .grew) { color: var(--color-warning-deep, #ab570a); font-weight: 500; }
+  :global(.file-status) {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-body);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  :global(.file-status.is-error) { color: var(--color-error); }
+  :global(.file-status.is-done) { color: #0a8a3e; }
+  :global(.file-actions) { display: flex; gap: 8px; }
+  :global(.file-row .icon-btn) {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  :global(.file-row .icon-btn:hover) {
+    border-color: var(--color-hairline-strong);
+    color: var(--color-ink);
+  }
+  :global(.file-row .icon-btn[disabled]) {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .action-bar {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-hairline);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .action-spacer { flex: 1; }
+
+  .reassurance {
+    color: var(--color-body);
+    text-align: center;
+    margin-top: 20px;
+    padding-inline: 8px;
+  }
+  .reassurance strong { color: var(--color-ink); font-weight: 500; }
+
+  @media (max-width: 720px) {
+    .settings-grid { grid-template-columns: 1fr; gap: 18px; }
+    :global(.file-row) {
+      grid-template-columns: 48px 1fr auto;
+      grid-template-areas:
+        "thumb meta status"
+        "actions actions actions";
+      gap: 12px;
+    }
+    :global(.file-row .file-thumb) { grid-area: thumb; }
+    :global(.file-row .file-meta) { grid-area: meta; }
+    :global(.file-row .file-status) { grid-area: status; }
+    :global(.file-row .file-actions) {
+      grid-area: actions;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+    .drop-zone { padding: 40px 20px; }
+  }
+
+  @media (max-width: 640px) {
+    .converter-shell { padding: 16px; border-radius: var(--radius-lg); }
+    .drop-zone { padding: 32px 16px; }
+    .drop-icon { width: 48px; height: 48px; margin-bottom: 12px; }
+    .drop-icon svg { width: 26px; height: 26px; }
+    .controls { margin-top: 20px; gap: 16px; }
+    .settings-grid { padding: 4px 14px 16px; }
+    .settings-summary { padding: 14px; }
+    .action-bar {
+      gap: 8px;
+    }
+    /* Convert-all is the primary action — give it the full row */
+    .action-bar :global(.btn-primary) {
+      flex: 1 1 100%;
+      order: -1;
+      justify-content: center;
+    }
+    .action-bar :global(.btn-secondary-sm) {
+      flex: 1 1 calc(50% - 4px);
+      justify-content: center;
+    }
+    .action-spacer { display: none; }
+    :global(.file-row) {
+      padding: 10px;
+      grid-template-columns: 44px 1fr auto;
+      gap: 10px;
+    }
+    :global(.file-thumb) { width: 44px !important; height: 44px !important; }
+    .reassurance { padding-inline: 0; margin-top: 16px; }
+  }
+
+  @media (max-width: 380px) {
+    .converter-shell { padding: 14px; }
+    .drop-zone { padding: 28px 12px; }
+    .drop-zone h3 { font-size: 18px; }
+    :global(.file-row) {
+      grid-template-columns: 40px 1fr;
+      grid-template-areas:
+        "thumb meta"
+        "status status"
+        "actions actions";
+      gap: 8px;
+    }
+    :global(.file-row .file-status) { grid-area: status; justify-self: start; }
+    :global(.file-thumb) { width: 40px !important; height: 40px !important; }
+  }
+</style>
+
+<script>
+  import {
+    convertImage,
+    humanFileSize,
+    isImageFile,
+    inferFormatId,
+  } from "../lib/converter.js";
+
+  // Find each converter shell on the page (multiple may exist on doorway pages).
+  document.querySelectorAll<HTMLElement>(".converter").forEach((root) => {
+    const id = root.querySelector<HTMLElement>("[id$='-drop']")?.id.replace("-drop", "");
+    if (!id) return;
+
+    const $ = <T extends HTMLElement = HTMLElement>(suffix: string) =>
+      document.getElementById(`${id}-${suffix}`) as T | null;
+
+    const drop = $("drop")!;
+    const input = $<HTMLInputElement>("input")!;
+    const controls = $("controls")!;
+    const list = $<HTMLUListElement>("list")!;
+    const actions = $("actions")!;
+    const clearBtn = $("clear")!;
+    const addMoreBtn = $("add-more")!;
+    const convertAllBtn = $<HTMLButtonElement>("convert-all")!;
+    const zipBtn = $<HTMLButtonElement>("download-zip")!;
+    const quality = $<HTMLInputElement>("quality")!;
+    const qualityValue = $("quality-value")!;
+    const resizeMode = $<HTMLSelectElement>("resize-mode")!;
+    const resizePercent = $<HTMLInputElement>("resize-percent")!;
+    const resizeW = $<HTMLInputElement>("resize-w")!;
+    const resizeH = $<HTMLInputElement>("resize-h")!;
+    const bg = $<HTMLInputElement>("bg")!;
+    const bgName = $("bg-name")!;
+
+    type FileEntry = {
+      id: string;
+      file: File;
+      sourceFormat: string;
+      status: "queued" | "converting" | "done" | "error";
+      thumbUrl: string;
+      resultBlob?: Blob;
+      resultName?: string;
+      error?: string;
+    };
+
+    const state: { files: FileEntry[]; target: string } = {
+      files: [],
+      target: root.querySelector<HTMLButtonElement>(".format-pill[aria-pressed='true']")?.dataset.format || "png",
+    };
+
+    /* ─────────── Drop-zone ─────────── */
+    drop.addEventListener("click", () => input.click());
+    drop.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    ["dragenter", "dragover"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => {
+        e.preventDefault();
+        drop.classList.add("is-dragover");
+      }),
+    );
+    ["dragleave", "drop"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => {
+        e.preventDefault();
+        drop.classList.remove("is-dragover");
+      }),
+    );
+    drop.addEventListener("drop", (e) => {
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt?.files) addFiles(dt.files);
+    });
+    input.addEventListener("change", () => {
+      if (input.files) addFiles(input.files);
+      input.value = "";
+    });
+    addMoreBtn.addEventListener("click", () => input.click());
+
+    // Allow paste from clipboard anywhere on the converter
+    root.addEventListener("paste", (e) => {
+      const items = (e as ClipboardEvent).clipboardData?.items;
+      if (!items) return;
+      const files: File[] = [];
+      for (const item of items) {
+        if (item.kind === "file") {
+          const f = item.getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (files.length) addFiles(files as unknown as FileList);
+    });
+
+    /* ─────────── Format pills ─────────── */
+    root.querySelectorAll<HTMLButtonElement>(".format-pill").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        root.querySelectorAll<HTMLButtonElement>(".format-pill").forEach((p) =>
+          p.setAttribute("aria-pressed", "false"),
+        );
+        pill.setAttribute("aria-pressed", "true");
+        state.target = pill.dataset.format!;
+        // Mark all completed files as re-queue-able
+        state.files.forEach((f) => {
+          if (f.status === "done" || f.status === "error") {
+            f.status = "queued";
+            f.resultBlob = undefined;
+            f.error = undefined;
+          }
+        });
+        render();
+      });
+    });
+
+    /* ─────────── Settings ─────────── */
+    quality.addEventListener("input", () => { qualityValue.textContent = quality.value; });
+    resizeMode.addEventListener("change", () => {
+      const mode = resizeMode.value;
+      resizePercent.hidden = mode !== "percent";
+      resizeW.hidden = mode !== "px";
+      resizeH.hidden = mode !== "px";
+    });
+    bg.addEventListener("input", () => {
+      bgName.textContent = `${labelForColor(bg.value)} (${bg.value})`;
+    });
+
+    /* ─────────── Actions ─────────── */
+    clearBtn.addEventListener("click", () => {
+      state.files.forEach((f) => URL.revokeObjectURL(f.thumbUrl));
+      state.files = [];
+      render();
+    });
+    convertAllBtn.addEventListener("click", async () => {
+      convertAllBtn.disabled = true;
+      const original = convertAllBtn.querySelector(".btn-label")!.textContent;
+      convertAllBtn.querySelector(".btn-label")!.textContent = "Converting…";
+      try {
+        await convertQueued();
+      } finally {
+        convertAllBtn.querySelector(".btn-label")!.textContent = original;
+        convertAllBtn.disabled = false;
+        const allDone = state.files.every((f) => f.status === "done");
+        zipBtn.hidden = !(allDone && state.files.length > 1);
+      }
+    });
+    zipBtn.addEventListener("click", downloadZip);
+
+    /* ─────────── Core flow ─────────── */
+    function addFiles(fileList: FileList | File[]) {
+      const arr = Array.from(fileList).filter(isImageFile);
+      for (const file of arr) {
+        const entry: FileEntry = {
+          id: crypto.randomUUID(),
+          file,
+          sourceFormat: inferFormatId(file),
+          status: "queued",
+          thumbUrl: URL.createObjectURL(file),
+        };
+        state.files.push(entry);
+      }
+      render();
+    }
+
+    function removeFile(id: string) {
+      const entry = state.files.find((f) => f.id === id);
+      if (entry) URL.revokeObjectURL(entry.thumbUrl);
+      state.files = state.files.filter((f) => f.id !== id);
+      render();
+    }
+
+    function getResizeOpts() {
+      const mode = resizeMode.value;
+      if (mode === "none") return undefined;
+      if (mode === "percent") {
+        const percent = parseInt(resizePercent.value, 10) || 100;
+        if (percent === 100) return undefined;
+        return { mode: "percent" as const, percent };
+      }
+      const w = parseInt(resizeW.value, 10);
+      const h = parseInt(resizeH.value, 10);
+      if (!w && !h) return undefined;
+      return { mode: "px" as const, width: w || undefined, height: h || undefined };
+    }
+
+    async function convertOne(entry: FileEntry) {
+      entry.status = "converting";
+      render();
+      try {
+        const target = state.target;
+        const blob = await convertImage(entry.file, {
+          to: target,
+          quality: parseInt(quality.value, 10),
+          resize: getResizeOpts(),
+          background: bg.value,
+        });
+        entry.resultBlob = blob;
+        const base = entry.file.name.replace(/\.[^.]+$/, "");
+        entry.resultName = `${base}.${target === "jpg" ? "jpg" : target}`;
+        entry.status = "done";
+      } catch (err: any) {
+        entry.status = "error";
+        entry.error = err?.message || "Conversion failed.";
+      }
+      render();
+    }
+
+    async function convertQueued() {
+      // Serial — keeps UI responsive even on huge batches.
+      for (const f of state.files) {
+        if (f.status === "queued") {
+          await convertOne(f);
+        }
+      }
+    }
+
+    function downloadResult(entry: FileEntry) {
+      if (!entry.resultBlob || !entry.resultName) return;
+      const url = URL.createObjectURL(entry.resultBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = entry.resultName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function downloadZip() {
+      const done = state.files.filter((f) => f.status === "done" && f.resultBlob);
+      if (!done.length) return;
+      zipBtn.disabled = true;
+      const original = zipBtn.textContent;
+      zipBtn.textContent = "Zipping…";
+      try {
+        const JSZip = (await import("jszip")).default;
+        const zip = new JSZip();
+        for (const f of done) {
+          zip.file(f.resultName!, f.resultBlob!);
+        }
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `image-convertor-${Date.now()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } finally {
+        zipBtn.textContent = original;
+        zipBtn.disabled = false;
+      }
+    }
+
+    /* ─────────── Render ─────────── */
+    function render() {
+      const empty = state.files.length === 0;
+      controls.hidden = empty;
+      actions.hidden = empty;
+      list.innerHTML = "";
+
+      if (empty) {
+        zipBtn.hidden = true;
+        return;
+      }
+
+      for (const entry of state.files) {
+        const li = document.createElement("li");
+        li.className = "file-row";
+
+        const thumb = document.createElement("img");
+        thumb.className = "file-thumb";
+        thumb.alt = "";
+        thumb.src = entry.thumbUrl;
+        thumb.onerror = () => { thumb.style.opacity = "0.4"; };
+        li.appendChild(thumb);
+
+        const meta = document.createElement("div");
+        meta.className = "file-meta";
+        const name = document.createElement("span");
+        name.className = "file-name";
+        name.textContent = entry.file.name;
+        meta.appendChild(name);
+
+        const info = document.createElement("span");
+        info.className = "file-info";
+        let infoText = `${entry.sourceFormat.toUpperCase()} · ${humanFileSize(entry.file.size)}`;
+        if (entry.status === "done" && entry.resultBlob) {
+          const delta = entry.resultBlob.size - entry.file.size;
+          const pct = Math.round((delta / entry.file.size) * 100);
+          const tag = delta < 0
+            ? `<span class="saved">−${Math.abs(pct)}% · ${humanFileSize(entry.resultBlob.size)}</span>`
+            : `<span class="grew">+${pct}% · ${humanFileSize(entry.resultBlob.size)}</span>`;
+          infoText += `  →  ${entry.resultName!.split(".").pop()!.toUpperCase()} · ${tag}`;
+          info.innerHTML = infoText;
+        } else {
+          info.textContent = infoText;
+        }
+        meta.appendChild(info);
+        li.appendChild(meta);
+
+        const status = document.createElement("span");
+        status.className = "file-status";
+        if (entry.status === "converting") {
+          status.innerHTML = `<span class="spinner" aria-hidden="true"></span> Converting…`;
+        } else if (entry.status === "done") {
+          status.classList.add("is-done");
+          status.textContent = "✓ Done";
+        } else if (entry.status === "error") {
+          status.classList.add("is-error");
+          status.textContent = entry.error || "Failed";
+        } else {
+          status.textContent = "Queued";
+        }
+        li.appendChild(status);
+
+        const actionsCell = document.createElement("div");
+        actionsCell.className = "file-actions";
+
+        const dlBtn = document.createElement("button");
+        dlBtn.type = "button";
+        dlBtn.className = "icon-btn";
+        dlBtn.title = "Download";
+        dlBtn.setAttribute("aria-label", "Download converted file");
+        dlBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+        dlBtn.disabled = entry.status !== "done";
+        dlBtn.addEventListener("click", () => downloadResult(entry));
+
+        const rmBtn = document.createElement("button");
+        rmBtn.type = "button";
+        rmBtn.className = "icon-btn";
+        rmBtn.title = "Remove";
+        rmBtn.setAttribute("aria-label", "Remove file");
+        rmBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+        rmBtn.addEventListener("click", () => removeFile(entry.id));
+
+        actionsCell.appendChild(dlBtn);
+        actionsCell.appendChild(rmBtn);
+        li.appendChild(actionsCell);
+
+        list.appendChild(li);
+      }
+
+      const queued = state.files.filter((f) => f.status === "queued").length;
+      const label = convertAllBtn.querySelector(".btn-label")!;
+      label.textContent = queued > 0
+        ? `Convert ${queued} file${queued === 1 ? "" : "s"}`
+        : "All converted";
+      convertAllBtn.disabled = queued === 0;
+      const allDone = state.files.length > 1 && state.files.every((f) => f.status === "done");
+      zipBtn.hidden = !allDone;
+    }
+
+    function labelForColor(hex: string) {
+      const named: Record<string, string> = {
+        "#ffffff": "White",
+        "#000000": "Black",
+        "#f5a623": "Amber",
+        "#0070f3": "Blue",
+        "#7928ca": "Violet",
+      };
+      return named[hex.toLowerCase()] || "Custom";
+    }
+  });
+</script>

@@ -1,0 +1,119 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="About — The Online Image Convertor That Doesn't Upload Your Files"
+  description="About Image Convertor — a free Online Image Convertor that runs entirely in your browser. What it is, who built it, and why we don't upload your images to a server."
+  keywords="online image convertor about, browser image converter, private image converter, client side image converter, no upload converter"
+>
+  <section class="page-container about-page">
+    <header class="about-header">
+      <span class="t-caption-mono eyebrow">About</span>
+      <h1 class="t-display-xl">A converter that respects your files.</h1>
+      <p class="t-body-lg sub">
+        Most "free online" image converters route your images through their servers. We don't.
+      </p>
+    </header>
+
+    <div class="about-body">
+      <h2 class="t-display-md">The pitch</h2>
+      <p class="t-body-md">
+        Image Convertor is a free, fast, browser-only image converter. Drop in a PNG, pick JPG, get a JPG. No upload bar, no waiting on a server, no signup form, no daily quota, no ads draped around the workspace.
+      </p>
+
+      <h2 class="t-display-md">Why client-side?</h2>
+      <p class="t-body-md">
+        Modern browsers can decode and encode all of the formats we support natively — the Canvas API has handled PNG, JPG, WebP, and GIF for a decade, and small JavaScript libraries cover the long tail (TIFF, ICO). There's no technical reason to upload your image to a stranger's server to flip its extension, and several reasons not to.
+      </p>
+      <ul class="reasons">
+        <li>
+          <strong>Privacy.</strong> Your image data never crosses the network. We never see it, log it, or touch it.
+        </li>
+        <li>
+          <strong>Speed.</strong> Skipping the round-trip — upload, queue, process, download — wins back several seconds per file. On batches, it's enormous.
+        </li>
+        <li>
+          <strong>Reliability.</strong> Once the page loads, the converter works without an internet connection. No 502s, no rate limits, no maintenance windows.
+        </li>
+        <li>
+          <strong>Honesty.</strong> A site that uploads your photos for "free" usually pays for the servers in some other way — ads, data, the gradual conversion of users into a paid tier. Browser-side has no marginal cost, so it stays free.
+        </li>
+      </ul>
+
+      <h2 class="t-display-md">Roadmap</h2>
+      <p class="t-body-md">
+        Next up: HEIC, AVIF, BMP, EPS, and proper multi-frame GIF/animated-WebP encoding. After that: an opt-in "metadata viewer" so you can see exactly what EXIF a photo carries before you publish it.
+      </p>
+
+      <h2 class="t-display-md">Open the converter</h2>
+      <p class="t-body-md">
+        <a class="cta-link" href="/#converter">Convert an image →</a>
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .about-page {
+    padding-block: 64px 32px;
+    max-width: 800px;
+  }
+  .about-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  @media (max-width: 640px) {
+    .about-page { padding-block: 40px 24px; }
+    .about-header { margin-bottom: 32px; }
+    .about-body h2 { margin-top: 12px; }
+  }
+  .eyebrow { color: var(--color-mute); }
+  .sub { color: var(--color-body); max-width: 580px; margin: 0; }
+
+  .about-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .about-body h2 {
+    margin: 24px 0 4px;
+  }
+  .about-body p { color: var(--color-body); margin: 0; max-width: 720px; }
+  .reasons {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .reasons li {
+    color: var(--color-body);
+    line-height: 24px;
+    padding-left: 16px;
+    border-left: 2px solid var(--color-hairline);
+  }
+  .reasons strong { color: var(--color-ink); }
+
+  .cta-link {
+    color: var(--color-ink);
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
+    background-color: var(--color-canvas-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    transition: all 0.15s ease;
+  }
+  .cta-link:hover {
+    background-color: var(--color-ink);
+    color: var(--color-on-primary);
+    border-color: var(--color-ink);
+  }
+</style>

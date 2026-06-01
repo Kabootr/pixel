@@ -1,0 +1,135 @@
+---
+import { FORMATS } from "../lib/formats.js";
+---
+
+<section id="formats" class="formats-band">
+  <div class="page-container">
+    <header class="formats-header">
+      <span class="t-caption-mono eyebrow">Supported formats</span>
+      <h2 class="t-display-lg">Seven formats today. More on the way.</h2>
+      <p class="t-body-lg sub">
+        Convert between any pair. We're starting with the formats that cover ~95% of everyday work — HEIC, AVIF, BMP, and EPS are next.
+      </p>
+    </header>
+
+    <div class="formats-grid">
+      {FORMATS.map((f) => (
+        <article class="format-card card-lg elev-2">
+          <header class="format-card-head">
+            <span class="format-tag">{f.label}</span>
+            <span class="t-caption-mono format-ext">.{f.ext}</span>
+          </header>
+          <h3 class="t-display-sm">{f.tagline}</h3>
+          <p class="t-body-md format-blurb">{f.blurb}</p>
+          <ul class="format-pros">
+            {f.pros.slice(0, 2).map((p) => (
+              <li>
+                <span class="check" aria-hidden="true">✓</span>
+                <span class="t-body-sm">{p}</span>
+              </li>
+            ))}
+          </ul>
+          <a class="format-link" href={`/png-to-${f.id}`}>
+            Convert to {f.label}
+            <span aria-hidden="true">→</span>
+          </a>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .formats-band {
+    padding: 96px 0 0;
+  }
+  .formats-header {
+    max-width: 720px;
+    margin: 0 auto 48px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  .eyebrow { color: var(--color-mute); }
+  .sub { color: var(--color-body); margin: 0; }
+
+  .formats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .format-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .format-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .format-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    padding: 4px 10px;
+    border-radius: 999px;
+    background-color: var(--color-canvas-soft);
+    border: 1px solid var(--color-hairline);
+  }
+  .format-ext { color: var(--color-mute); }
+  .format-blurb { color: var(--color-body); margin: 0; }
+
+  .format-pros {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .format-pros li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-body);
+  }
+  .check {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background-color: rgba(10, 138, 62, 0.12);
+    color: #0a8a3e;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .format-link {
+    margin-top: 8px;
+    color: var(--color-ink);
+    font-weight: 500;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.15s ease;
+  }
+  .format-link:hover { gap: 10px; color: var(--color-link); }
+
+  @media (max-width: 980px) {
+    .formats-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .formats-grid { grid-template-columns: 1fr; }
+    .formats-band { padding-top: 56px; }
+    .formats-header { margin-bottom: 32px; gap: 12px; }
+  }
+</style>
