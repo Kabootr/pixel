@@ -7,6 +7,7 @@ import FormatGrid from "../components/FormatGrid.astro";
 import DarkBand from "../components/DarkBand.astro";
 import SeoContent from "../components/SeoContent.astro";
 import FAQ from "../components/FAQ.astro";
+import { productFaq, seoFaq, toFaqPageSchema } from "../lib/faqData.js";
 
 const title =
   "Online Image Convertor — Free PNG, JPG, WebP, GIF, SVG, ICO & TIFF Converter";
@@ -66,52 +67,7 @@ const jsonLd = [
     url: `${siteUrl}/`,
     logo: `${siteUrl}/favicon.svg`,
   },
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "Are my images really not uploaded?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Correct. The entire conversion pipeline runs in your browser using the Canvas API and a couple of small WASM/JS libraries for less-common formats like TIFF. There is no server endpoint that accepts your image data — open DevTools and watch the Network tab to verify.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Is there a file-size limit on this Online Image Convertor?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "No hard limit. The practical ceiling is your device's available memory — modern laptops handle 100MB+ images comfortably. Mobile devices vary.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Do you support batch / bulk image conversion?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes. Drop in as many files as you like and click Convert all. Download them individually, or grab the whole batch as a single ZIP.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What image formats does this Online Image Convertor support?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "PNG, JPG/JPEG, WebP, GIF, SVG, ICO and TIFF. You can convert between any pair — 42 conversion directions in total.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Is this image converter really free?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes — fully free with no signup, no ads inside the workspace, and no daily quota. Because conversion happens in your browser, there are no server costs to recover.",
-        },
-      },
-    ],
-  },
+  toFaqPageSchema([...productFaq, ...seoFaq]),
 ];
 ---
 
@@ -129,4 +85,9 @@ const jsonLd = [
   <DarkBand />
   <SeoContent />
   <FAQ />
+  <FAQ
+    items={seoFaq}
+    eyebrow="More about images"
+    title="Common questions, plain answers."
+  />
 </Layout>
