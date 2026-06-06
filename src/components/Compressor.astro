@@ -1,0 +1,569 @@
+---
+interface Props {
+  id?: string;
+}
+const { id = "compressor" } = Astro.props;
+
+const OUTPUT_FORMATS = [
+  { id: "auto", label: "Auto (best per file)" },
+  { id: "jpg", label: "JPG" },
+  { id: "webp", label: "WebP" },
+  { id: "png", label: "PNG" },
+];
+
+const PRESETS = [
+  { label: "Tiny (web)", quality: 60 },
+  { label: "Small", quality: 72 },
+  { label: "Balanced", quality: 82 },
+  { label: "High", quality: 92 },
+];
+---
+
+<section id={id} class="tool-wrap compressor">
+  <div class="tool-shell elev-4">
+    <div
+      class="drop-zone"
+      id={`${id}-drop`}
+      role="button"
+      tabindex="0"
+      aria-label="Drop images here, or click to choose files"
+    >
+      <div class="drop-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 14 10 14 10 20" />
+          <polyline points="20 10 14 10 14 4" />
+          <line x1="14" y1="10" x2="21" y2="3" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+      </div>
+      <h3 class="t-display-sm">Drop images to compress</h3>
+      <p class="t-body-sm drop-sub">
+        or <span class="link-like">browse</span> — best for PNG / JPG / WebP photos
+      </p>
+      <p class="t-caption-mono drop-meta">
+        100% client-side · no uploads · no size limit
+      </p>
+      <input
+        type="file"
+        id={`${id}-input`}
+        multiple
+        accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.tif,.tiff,image/*"
+        hidden
+      />
+    </div>
+
+    <div class="controls" id={`${id}-controls`} hidden>
+      <div class="controls-row">
+        <label class="control-label t-caption-mono">Output format</label>
+        <div class="format-pills" role="radiogroup" aria-label="Output format">
+          {OUTPUT_FORMATS.map((f, idx) => (
+            <button
+              type="button"
+              class="format-pill"
+              data-format={f.id}
+              role="radio"
+              aria-pressed={idx === 0 ? "true" : "false"}
+            >{f.label}</button>
+          ))}
+        </div>
+        <p class="t-caption-mono setting-help">
+          <strong>Auto</strong> keeps each file in its original format, except PNG photos &gt; 50 KB which compress dramatically better as WebP.
+        </p>
+      </div>
+
+      <div class="quality-row">
+        <label class="t-body-sm setting-label" for={`${id}-quality`}>
+          Quality
+          <span class="quality-value" id={`${id}-quality-value`}>82</span>
+        </label>
+        <input type="range" id={`${id}-quality`} class="range" min="10" max="100" value="82" step="1" />
+        <div class="quality-scale">
+          <span>Tiny</span><span>Balanced</span><span>Lossless</span>
+        </div>
+      </div>
+
+      <div class="preset-row">
+        <span class="t-caption-mono preset-label">Presets</span>
+        <div class="preset-pills">
+          {PRESETS.map((p) => (
+            <button
+              type="button"
+              class="preset-pill"
+              data-quality={p.quality}
+            >{p.label} · q{p.quality}</button>
+          ))}
+        </div>
+      </div>
+
+      <details class="settings-details">
+        <summary class="settings-summary">
+          <span class="t-body-sm-strong">Resize before compress · background</span>
+          <span class="t-caption-mono settings-hint">optional</span>
+        </summary>
+        <div class="settings-grid">
+          <div class="setting">
+            <label class="t-body-sm setting-label" for={`${id}-maxside`}>
+              Cap long side (px)
+              <span class="quality-value" id={`${id}-maxside-value`}>off</span>
+            </label>
+            <input type="range" id={`${id}-maxside`} class="range" min="0" max="4096" value="0" step="64" />
+            <p class="t-caption-mono setting-help">Shrinks big sources before encoding. Often the biggest size win.</p>
+          </div>
+          <div class="setting">
+            <label class="t-body-sm setting-label" for={`${id}-bg`}>
+              Background
+              <span class="t-caption-mono setting-hint">JPG only</span>
+            </label>
+            <div class="bg-row">
+              <input type="color" id={`${id}-bg`} value="#ffffff" class="color-swatch" />
+              <span class="t-body-sm bg-name" id={`${id}-bg-name`}>White (#ffffff)</span>
+            </div>
+            <p class="t-caption-mono setting-help">Fills transparency for opaque outputs.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <ul class="file-list" id={`${id}-list`} aria-live="polite"></ul>
+
+    <div class="action-bar" id={`${id}-actions`} hidden>
+      <button type="button" class="btn-secondary-sm" id={`${id}-clear`}>Clear all</button>
+      <div class="action-spacer"></div>
+      <span class="t-caption-mono total-savings" id={`${id}-total`} hidden></span>
+      <button type="button" class="btn-secondary-sm" id={`${id}-add-more`}>+ Add more</button>
+      <button type="button" class="btn-primary" id={`${id}-process-all`}>
+        <span class="btn-label">Compress all</span>
+      </button>
+      <button type="button" class="btn-primary" id={`${id}-download-zip`} hidden>Download ZIP</button>
+    </div>
+  </div>
+
+  <p class="tool-reassurance">
+    <strong>Your files never leave this page.</strong> Compression happens inside your browser — no uploads.
+  </p>
+</section>
+
+<style>
+  .drop-icon {
+    width: 56px; height: 56px; border-radius: 999px;
+    background-color: var(--color-canvas);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--color-ink); margin-bottom: 16px;
+    border: 1px solid var(--color-hairline); flex-shrink: 0;
+  }
+  .drop-sub { color: var(--color-body); margin: 8px 0 6px; }
+  .drop-meta { color: var(--color-mute); margin-top: 8px; }
+  .link-like { color: var(--color-link); text-decoration: underline; text-underline-offset: 2px; }
+
+  .controls { margin-top: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .controls-row { display: flex; flex-direction: column; gap: 8px; }
+  .control-label { color: var(--color-mute); }
+  .setting-help { color: var(--color-mute); }
+  .setting-help strong { color: var(--color-ink); font-weight: 500; }
+  .format-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .quality-row {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 16px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    background-color: var(--color-canvas-soft);
+  }
+  .setting-label {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; color: var(--color-ink); font-weight: 500; flex-wrap: wrap;
+  }
+  .quality-value {
+    font-family: var(--font-mono); font-size: 12px; color: var(--color-body);
+    padding: 2px 8px; border-radius: 999px;
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+  }
+  .quality-scale {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 11px; color: var(--color-mute);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  .preset-row { display: flex; flex-direction: column; gap: 8px; }
+  .preset-label { color: var(--color-mute); }
+  .preset-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .preset-pill {
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    font-size: 12px; font-family: var(--font-mono); letter-spacing: 0.04em;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .preset-pill:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+
+  .settings-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    padding: 8px 16px 20px;
+  }
+  .setting { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .bg-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .color-swatch {
+    width: 44px; height: 32px; padding: 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm); background: none; cursor: pointer;
+  }
+  .bg-name { color: var(--color-body); font-family: var(--font-mono); font-size: 12px; }
+
+  .total-savings {
+    color: var(--color-body);
+    background-color: var(--color-canvas-soft);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+  }
+  .total-savings.is-positive { color: #0a8a3e; }
+
+  @media (max-width: 720px) { .settings-grid { grid-template-columns: 1fr; gap: 18px; } }
+</style>
+
+<script>
+  import {
+    decodeToCanvas,
+    resizeCanvas,
+    encodeRaster,
+    humanFileSize,
+    isImageFile,
+    inferFormatId,
+    replaceExt,
+    rasterExtFor,
+  } from "../lib/image-ops.js";
+
+  document.querySelectorAll<HTMLElement>(".compressor").forEach((root) => {
+    const id = root.querySelector<HTMLElement>("[id$='-drop']")?.id.replace("-drop", "");
+    if (!id) return;
+    const $ = <T extends HTMLElement = HTMLElement>(suffix: string) =>
+      document.getElementById(`${id}-${suffix}`) as T | null;
+
+    const drop = $("drop")!;
+    const input = $<HTMLInputElement>("input")!;
+    const controls = $("controls")!;
+    const list = $<HTMLUListElement>("list")!;
+    const actions = $("actions")!;
+    const clearBtn = $("clear")!;
+    const addMoreBtn = $("add-more")!;
+    const processBtn = $<HTMLButtonElement>("process-all")!;
+    const zipBtn = $<HTMLButtonElement>("download-zip")!;
+    const quality = $<HTMLInputElement>("quality")!;
+    const qualityValue = $("quality-value")!;
+    const maxSide = $<HTMLInputElement>("maxside")!;
+    const maxSideValue = $("maxside-value")!;
+    const bg = $<HTMLInputElement>("bg")!;
+    const bgName = $("bg-name")!;
+    const totalEl = $("total")!;
+
+    type Entry = {
+      id: string;
+      file: File;
+      srcFormat: string;
+      srcW?: number;
+      srcH?: number;
+      status: "queued" | "processing" | "done" | "error";
+      thumbUrl: string;
+      blob?: Blob;
+      outName?: string;
+      outFmt?: string;
+      error?: string;
+    };
+
+    const state = {
+      files: [] as Entry[],
+      format: "auto",
+    };
+
+    /* Drop / paste */
+    drop.addEventListener("click", () => input.click());
+    drop.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+    });
+    ["dragenter", "dragover"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.add("is-dragover"); }),
+    );
+    ["dragleave", "drop"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.remove("is-dragover"); }),
+    );
+    drop.addEventListener("drop", (e) => {
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt?.files) addFiles(dt.files);
+    });
+    input.addEventListener("change", () => { if (input.files) addFiles(input.files); input.value = ""; });
+    addMoreBtn.addEventListener("click", () => input.click());
+    root.addEventListener("paste", (e) => {
+      const items = (e as ClipboardEvent).clipboardData?.items;
+      if (!items) return;
+      const files: File[] = [];
+      for (const item of items) {
+        if (item.kind === "file") { const f = item.getAsFile(); if (f) files.push(f); }
+      }
+      if (files.length) addFiles(files as unknown as FileList);
+    });
+
+    /* Format pills */
+    root.querySelectorAll<HTMLButtonElement>(".format-pill").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        root.querySelectorAll<HTMLButtonElement>(".format-pill").forEach((p) => p.setAttribute("aria-pressed", "false"));
+        pill.setAttribute("aria-pressed", "true");
+        state.format = pill.dataset.format!;
+        requeueDone();
+      });
+    });
+
+    /* Sliders */
+    quality.addEventListener("input", () => { qualityValue.textContent = quality.value; requeueDone(); });
+    maxSide.addEventListener("input", () => {
+      const v = parseInt(maxSide.value, 10);
+      maxSideValue.textContent = v === 0 ? "off" : String(v);
+      requeueDone();
+    });
+    bg.addEventListener("input", () => {
+      bgName.textContent = `${labelForColor(bg.value)} (${bg.value})`;
+      requeueDone();
+    });
+
+    /* Presets */
+    root.querySelectorAll<HTMLButtonElement>(".preset-pill").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        const q = parseInt(pill.dataset.quality!, 10);
+        quality.value = String(q);
+        qualityValue.textContent = String(q);
+        requeueDone();
+      });
+    });
+
+    /* Buttons */
+    clearBtn.addEventListener("click", () => {
+      state.files.forEach((f) => URL.revokeObjectURL(f.thumbUrl));
+      state.files = [];
+      render();
+    });
+    processBtn.addEventListener("click", async () => {
+      processBtn.disabled = true;
+      const labelEl = processBtn.querySelector(".btn-label")!;
+      const original = labelEl.textContent;
+      labelEl.textContent = "Compressing…";
+      try {
+        for (const f of state.files) if (f.status === "queued") await processOne(f);
+      } finally {
+        labelEl.textContent = original;
+        processBtn.disabled = false;
+        const allDone = state.files.length > 1 && state.files.every((f) => f.status === "done");
+        zipBtn.hidden = !allDone;
+      }
+    });
+    zipBtn.addEventListener("click", downloadZip);
+
+    function addFiles(fileList: FileList | File[]) {
+      const arr = Array.from(fileList).filter(isImageFile);
+      for (const file of arr) {
+        const entry: Entry = {
+          id: crypto.randomUUID(),
+          file,
+          srcFormat: inferFormatId(file),
+          status: "queued",
+          thumbUrl: URL.createObjectURL(file),
+        };
+        state.files.push(entry);
+        probeDimensions(entry);
+      }
+      render();
+    }
+
+    function probeDimensions(entry: Entry) {
+      const img = new Image();
+      img.onload = () => {
+        entry.srcW = img.naturalWidth;
+        entry.srcH = img.naturalHeight;
+        render();
+      };
+      img.src = entry.thumbUrl;
+    }
+
+    function removeFile(eid: string) {
+      const e = state.files.find((f) => f.id === eid);
+      if (e) URL.revokeObjectURL(e.thumbUrl);
+      state.files = state.files.filter((f) => f.id !== eid);
+      render();
+    }
+
+    function targetFormatFor(entry: Entry) {
+      if (state.format === "auto") {
+        const sf = entry.srcFormat;
+        // Photos saved as PNG over ~50KB: switch to WebP.
+        if (sf === "png" && entry.file.size > 50 * 1024) return "webp";
+        if (["png", "jpg", "jpeg", "webp"].includes(sf)) return sf === "jpeg" ? "jpg" : sf;
+        return "webp";
+      }
+      return state.format;
+    }
+
+    async function processOne(entry: Entry) {
+      entry.status = "processing";
+      render();
+      try {
+        const src = await decodeToCanvas(entry.file);
+        const m = parseInt(maxSide.value, 10);
+        const sized = m > 0 ? resizeCanvas(src, { mode: "fit", maxSide: m }) : src;
+        const fmt = targetFormatFor(entry);
+        const blob = await encodeRaster(sized, {
+          format: fmt,
+          quality: parseInt(quality.value, 10),
+          background: bg.value,
+        });
+        entry.blob = blob;
+        entry.outFmt = fmt;
+        entry.outName = replaceExt(entry.file.name, rasterExtFor(fmt));
+        entry.status = "done";
+      } catch (err: any) {
+        entry.status = "error";
+        entry.error = err?.message || "Compression failed.";
+      }
+      render();
+    }
+
+    function requeueDone() {
+      let changed = false;
+      state.files.forEach((f) => {
+        if (f.status === "done" || f.status === "error") {
+          f.status = "queued";
+          f.blob = undefined;
+          f.error = undefined;
+          changed = true;
+        }
+      });
+      if (changed) render();
+    }
+
+    async function downloadZip() {
+      const done = state.files.filter((f) => f.status === "done" && f.blob);
+      if (!done.length) return;
+      zipBtn.disabled = true;
+      const original = zipBtn.textContent;
+      zipBtn.textContent = "Zipping…";
+      try {
+        const JSZip = (await import("jszip")).default;
+        const zip = new JSZip();
+        for (const f of done) zip.file(f.outName!, f.blob!);
+        const blob = await zip.generateAsync({ type: "blob" });
+        downloadBlob(blob, `pixelmorph-compressed-${Date.now()}.zip`);
+      } finally {
+        zipBtn.textContent = original;
+        zipBtn.disabled = false;
+      }
+    }
+
+    function downloadOne(entry: Entry) {
+      if (!entry.blob || !entry.outName) return;
+      downloadBlob(entry.blob, entry.outName);
+    }
+    function downloadBlob(blob: Blob, name: string) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function render() {
+      const empty = state.files.length === 0;
+      controls.hidden = empty;
+      actions.hidden = empty;
+      list.innerHTML = "";
+      if (empty) { zipBtn.hidden = true; totalEl.hidden = true; return; }
+
+      let totalIn = 0, totalOut = 0, doneCount = 0;
+      for (const entry of state.files) {
+        const li = document.createElement("li");
+        li.className = "file-row";
+
+        const thumb = document.createElement("img");
+        thumb.className = "file-thumb";
+        thumb.alt = ""; thumb.src = entry.thumbUrl;
+        thumb.onerror = () => { thumb.style.opacity = "0.4"; };
+        li.appendChild(thumb);
+
+        const meta = document.createElement("div");
+        meta.className = "file-meta";
+        const name = document.createElement("span");
+        name.className = "file-name";
+        name.textContent = entry.file.name;
+        meta.appendChild(name);
+
+        const info = document.createElement("span");
+        info.className = "file-info";
+        let infoText = `${entry.srcFormat.toUpperCase()} · ${humanFileSize(entry.file.size)}`;
+        if (entry.srcW && entry.srcH) infoText += ` · ${entry.srcW}×${entry.srcH}`;
+        if (entry.status === "done" && entry.blob) {
+          totalIn += entry.file.size; totalOut += entry.blob.size; doneCount++;
+          const delta = entry.blob.size - entry.file.size;
+          const pct = Math.round((delta / entry.file.size) * 100);
+          const tag = delta < 0
+            ? `<span class="saved">−${Math.abs(pct)}% · ${humanFileSize(entry.blob.size)}</span>`
+            : `<span class="grew">+${pct}% · ${humanFileSize(entry.blob.size)}</span>`;
+          infoText += `  →  ${entry.outFmt!.toUpperCase()} · ${tag}`;
+          info.innerHTML = infoText;
+        } else {
+          info.textContent = infoText;
+        }
+        meta.appendChild(info);
+        li.appendChild(meta);
+
+        const status = document.createElement("span");
+        status.className = "file-status";
+        if (entry.status === "processing") status.innerHTML = `<span class="spinner" aria-hidden="true"></span> Compressing…`;
+        else if (entry.status === "done") { status.classList.add("is-done"); status.textContent = "✓ Done"; }
+        else if (entry.status === "error") { status.classList.add("is-error"); status.textContent = entry.error || "Failed"; }
+        else status.textContent = "Queued";
+        li.appendChild(status);
+
+        const actionsCell = document.createElement("div");
+        actionsCell.className = "file-actions";
+        const dlBtn = document.createElement("button");
+        dlBtn.type = "button"; dlBtn.className = "icon-btn";
+        dlBtn.title = "Download"; dlBtn.setAttribute("aria-label", "Download compressed file");
+        dlBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+        dlBtn.disabled = entry.status !== "done";
+        dlBtn.addEventListener("click", () => downloadOne(entry));
+        const rmBtn = document.createElement("button");
+        rmBtn.type = "button"; rmBtn.className = "icon-btn";
+        rmBtn.title = "Remove"; rmBtn.setAttribute("aria-label", "Remove file");
+        rmBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+        rmBtn.addEventListener("click", () => removeFile(entry.id));
+        actionsCell.appendChild(dlBtn); actionsCell.appendChild(rmBtn);
+        li.appendChild(actionsCell);
+        list.appendChild(li);
+      }
+
+      const queued = state.files.filter((f) => f.status === "queued").length;
+      const label = processBtn.querySelector(".btn-label")!;
+      label.textContent = queued > 0 ? `Compress ${queued} file${queued === 1 ? "" : "s"}` : "All compressed";
+      processBtn.disabled = queued === 0;
+      const allDone = state.files.length > 1 && state.files.every((f) => f.status === "done");
+      zipBtn.hidden = !allDone;
+
+      if (doneCount > 1) {
+        const delta = totalOut - totalIn;
+        const pct = Math.round((delta / totalIn) * 100);
+        totalEl.hidden = false;
+        totalEl.classList.toggle("is-positive", delta < 0);
+        totalEl.textContent = delta < 0
+          ? `Saved ${humanFileSize(Math.abs(delta))} · −${Math.abs(pct)}% total`
+          : `+${humanFileSize(delta)} · +${pct}% total`;
+      } else {
+        totalEl.hidden = true;
+      }
+    }
+
+    function labelForColor(hex: string) {
+      const named: Record<string, string> = {
+        "#ffffff": "White", "#000000": "Black",
+        "#f5a623": "Amber", "#0070f3": "Blue", "#7928ca": "Violet",
+      };
+      return named[hex.toLowerCase()] || "Custom";
+    }
+  });
+</script>

@@ -1,0 +1,141 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import Resizer from "../components/Resizer.astro";
+import FAQ from "../components/FAQ.astro";
+import { toFaqPageSchema } from "../lib/faqData.js";
+
+const title = "Resize Images Online — Free, Private Browser Resizer | PixelMorph";
+const description =
+  "Resize PNG, JPG, WebP, GIF, SVG and TIFF images in your browser. Bulk resize by percentage, exact pixels, or long-side fit. No upload, no signup, no file-size limit.";
+const keywords = [
+  "image resizer", "resize image online", "bulk image resizer", "batch resize images",
+  "resize png", "resize jpg", "resize webp", "free image resizer",
+  "browser image resizer", "online image resizer no upload", "private image resizer",
+  "pixelmorph resize", "resize images to specific dimensions",
+].join(", ");
+
+const siteUrl = "https://pixelmorph.app";
+const pageUrl = `${siteUrl}/resize`;
+
+const faqs = [
+  {
+    q: "Does PixelMorph upload my images when I resize them?",
+    a: "No. Every pixel stays on your device. The resize happens in your browser using the Canvas API — there is no upload step, no server, and no analytics on file contents.",
+  },
+  {
+    q: "Is there a file-size or batch limit?",
+    a: "No hard limit. Browsers cap individual canvas dimensions (~16,384 px per side in Chrome), and very large batches will be bounded by your device's memory, but there's no PixelMorph-imposed cap.",
+  },
+  {
+    q: "Can I bulk-resize many images at once?",
+    a: "Yes. Drop as many images as you want, pick a resize mode, and hit \"Resize all\". You can download each file individually or grab the full batch as a single ZIP.",
+  },
+  {
+    q: "Will resizing lose quality?",
+    a: "Downscaling is essentially lossless visually — we use high-quality bicubic sampling. Upscaling re-creates pixels that weren't there, so very large enlargements will soften the image. For lossy output formats (JPG / WebP), the quality slider controls the encoder.",
+  },
+  {
+    q: "What does \"long side\" mean?",
+    a: "It's the longer of width or height. \"Long side 1920\" means: shrink the image so its longest dimension is exactly 1920 pixels, keeping the original aspect ratio. The short side scales proportionally.",
+  },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "PixelMorph Image Resizer",
+    url: pageUrl,
+    applicationCategory: "MultimediaApplication",
+    applicationSubCategory: "Image Resizer",
+    operatingSystem: "Any (browser-based)",
+    description,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Resize images by percentage, exact pixels, or long-side fit",
+      "Bulk / batch resize with single ZIP download",
+      "Lock aspect ratio toggle",
+      "Quality control for JPG / WebP output",
+      "100% client-side — files never leave your browser",
+    ],
+    browserRequirements: "Requires a modern browser with Canvas API support",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to resize images online for free",
+    description: "Resize PNG, JPG, WebP and more in your browser with PixelMorph.",
+    totalTime: "PT15S",
+    step: [
+      { "@type": "HowToStep", name: "Drop your images", text: "Drag-drop, click to browse, or paste an image from your clipboard. Any number of files." },
+      { "@type": "HowToStep", name: "Pick a resize mode", text: "Choose By percent, By pixels, or Fit to box. Tap a quick preset to apply a common size in one click." },
+      { "@type": "HowToStep", name: "Download the results", text: "Click Resize all, then save each file or grab the whole batch as a ZIP." },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "PixelMorph", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 2, name: "Resize", item: pageUrl },
+    ],
+  },
+  toFaqPageSchema(faqs),
+];
+---
+
+<Layout title={title} description={description} keywords={keywords} jsonLd={jsonLd}>
+  <Hero
+    eyebrow="Resize · Private · Bulk"
+    title="Resize images, privately, in your browser."
+    subtitle="Drop one image or a hundred. Scale by percentage, hit an exact pixel size, or fit everything to a max long side. Nothing uploads."
+  >
+    <Resizer id="resizer" />
+  </Hero>
+
+  <section class="page-container resize-explain">
+    <div class="explain-grid">
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">By percentage</span>
+        <h2 class="t-display-md">Quick proportional shrink.</h2>
+        <p class="t-body-md">Slide the scale to halve your batch, quarter it, or double a tiny source. Aspect ratio stays exact — nothing skews.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">By pixels</span>
+        <h2 class="t-display-md">Hit an exact dimension.</h2>
+        <p class="t-body-md">Type a target width and height. Leave one side blank to keep the aspect ratio. The lock toggle keeps both sides in sync as you type.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Fit to box</span>
+        <h2 class="t-display-md">Cap the long side.</h2>
+        <p class="t-body-md">"Long side ≤ 1920" is the standard ask for blog images, email attachments and image-board uploads. Images already smaller pass through untouched.</p>
+      </article>
+    </div>
+  </section>
+
+  <FAQ
+    items={faqs}
+    eyebrow="Resize FAQs"
+    title="Resizing, plain answers."
+  />
+</Layout>
+
+<style>
+  .resize-explain { padding-top: 64px; }
+  .explain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .explain-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .explain-eyebrow { color: var(--color-mute); }
+  @media (max-width: 860px) {
+    .explain-grid { grid-template-columns: 1fr; }
+    .resize-explain { padding-top: 48px; }
+  }
+</style>

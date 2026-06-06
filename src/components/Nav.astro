@@ -24,7 +24,49 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     </a>
 
     <nav class="nav-links" aria-label="Primary">
-      <a class:list={["nav-link", isActive("/formats") && "is-active"]} href="/#formats">Formats</a>
+      <div class="nav-dropdown">
+        <button
+          type="button"
+          class:list={["nav-link", "nav-dropdown-trigger", (isActive("/resize") || isActive("/compress") || isActive("/crop") || isActive("/adjust") || isActive("/editor")) && "is-active"]}
+          aria-haspopup="true"
+          aria-expanded="false"
+          id="nav-tools-trigger"
+        >
+          Tools
+          <svg class="caret" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="nav-dropdown-menu" id="nav-tools-menu" role="menu">
+          <a class="nav-dropdown-item nav-item-featured" href="/editor" role="menuitem">
+            <span class="nav-item-title">
+              Editor
+              <span class="nav-item-badge">NEW</span>
+            </span>
+            <span class="nav-item-desc">All tools, one canvas, local library</span>
+          </a>
+          <a class="nav-dropdown-item" href="/" role="menuitem">
+            <span class="nav-item-title">Convert format</span>
+            <span class="nav-item-desc">PNG, JPG, WebP, GIF, SVG, ICO, TIFF</span>
+          </a>
+          <a class="nav-dropdown-item" href="/resize" role="menuitem">
+            <span class="nav-item-title">Resize</span>
+            <span class="nav-item-desc">% · exact pixels · fit to box</span>
+          </a>
+          <a class="nav-dropdown-item" href="/compress" role="menuitem">
+            <span class="nav-item-title">Compress</span>
+            <span class="nav-item-desc">Quality slider · size delta · auto-format</span>
+          </a>
+          <a class="nav-dropdown-item" href="/crop" role="menuitem">
+            <span class="nav-item-title">Crop</span>
+            <span class="nav-item-desc">Free · 1:1 · 16:9 · 9:16 · drag handles</span>
+          </a>
+          <a class="nav-dropdown-item" href="/adjust" role="menuitem">
+            <span class="nav-item-title">Tweak colours</span>
+            <span class="nav-item-desc">Brightness · contrast · hue · presets</span>
+          </a>
+        </div>
+      </div>
       <a class:list={["nav-link", isActive("/about") && "is-active"]} href="/about">About</a>
       <a class:list={["nav-link", isActive("/privacy") && "is-active"]} href="/privacy">Privacy</a>
     </nav>
@@ -47,7 +89,7 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
       </button>
       <a
         class="nav-cta nav-cta-ghost"
-        href="https://github.com/Abbhiishek/image-convertor"
+        href="https://github.com/Kabootr/pixel"
         target="_blank"
         rel="noopener"
         aria-label="PixelMorph on GitHub"
@@ -61,14 +103,20 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
   </div>
 
   <div class="nav-mobile" id="nav-mobile" hidden>
-    <a href="/#formats">Formats</a>
+    <span class="nav-mobile-section t-caption-mono">Tools</span>
+    <a href="/editor">Editor · all-in-one</a>
+    <a href="/">Convert format</a>
+    <a href="/resize">Resize</a>
+    <a href="/compress">Compress</a>
+    <a href="/crop">Crop</a>
+    <a href="/adjust">Tweak colours</a>
     <a href="/about">About</a>
     <a href="/privacy">Privacy</a>
     <button type="button" class="theme-toggle theme-toggle-mobile" id="theme-toggle-mobile" aria-label="Toggle dark mode">
       <span class="theme-toggle-label">Theme</span>
       <span class="theme-toggle-value" id="theme-toggle-value">Light</span>
     </button>
-    <a href="https://github.com/Abbhiishek/image-convertor" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/Kabootr/pixel" target="_blank" rel="noopener">GitHub</a>
     <a href="/#converter" class="btn-primary-sm" style="justify-content:center;">Open Converter</a>
   </div>
 </header>
@@ -132,6 +180,93 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     background-color: var(--color-canvas-soft);
   }
   .nav-link.is-active { color: var(--color-ink); }
+
+  /* Dropdown menu */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav-dropdown-trigger .caret {
+    transition: transform 0.15s ease;
+    margin-top: 1px;
+    opacity: 0.7;
+  }
+  .nav-dropdown-trigger[aria-expanded="true"] .caret { transform: rotate(180deg); }
+  .nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 8px;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+    box-shadow:
+      0 2px 2px rgba(0, 0, 0, 0.04),
+      0 8px 16px -4px rgba(0, 0, 0, 0.08),
+      0 24px 32px -8px rgba(0, 0, 0, 0.06);
+  }
+  .nav-dropdown-menu.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .nav-dropdown-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+  .nav-dropdown-item:hover { background-color: var(--color-canvas-soft); }
+  .nav-item-title {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-item-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    background: linear-gradient(135deg, var(--color-grad-develop-start), var(--color-grad-preview-end));
+    color: white;
+    padding: 1px 6px;
+    border-radius: 999px;
+  }
+  .nav-item-featured {
+    background-color: var(--color-canvas-soft);
+    border: 1px solid var(--color-hairline);
+    margin-bottom: 4px;
+  }
+  .nav-item-desc {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--color-mute);
+    letter-spacing: 0.02em;
+  }
+
   .nav-ctas {
     display: flex;
     align-items: center;
@@ -228,6 +363,11 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
     margin-top: 12px;
     padding: 12px 16px;
   }
+  .nav-mobile-section {
+    color: var(--color-mute);
+    padding: 16px 4px 6px;
+    border-bottom: none;
+  }
 
   .theme-toggle-mobile {
     width: 100%;
@@ -264,6 +404,25 @@ const isActive = (p: string) => pathname === p || pathname.startsWith(p + "/");
 </style>
 
 <script>
+  // Tools dropdown (desktop nav)
+  const toolsTrigger = document.getElementById("nav-tools-trigger");
+  const toolsMenu = document.getElementById("nav-tools-menu");
+  const closeTools = () => {
+    toolsMenu?.classList.remove("is-open");
+    toolsTrigger?.setAttribute("aria-expanded", "false");
+  };
+  toolsTrigger?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = toolsMenu?.classList.toggle("is-open");
+    toolsTrigger.setAttribute("aria-expanded", String(!!open));
+  });
+  document.addEventListener("click", (e) => {
+    if (!toolsMenu?.classList.contains("is-open")) return;
+    if (toolsMenu.contains(e.target as Node) || toolsTrigger?.contains(e.target as Node)) return;
+    closeTools();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeTools(); });
+
   const burger = document.getElementById("nav-burger");
   const mobile = document.getElementById("nav-mobile");
   const close = () => {

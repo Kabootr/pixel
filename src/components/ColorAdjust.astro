@@ -1,0 +1,482 @@
+---
+interface Props {
+  id?: string;
+}
+const { id = "adjust" } = Astro.props;
+
+const OUTPUT_FORMATS = [
+  { id: "png", label: "PNG" },
+  { id: "jpg", label: "JPG" },
+  { id: "webp", label: "WebP" },
+];
+
+// Each slider: id (matches state key), label, min, max, default, unit
+const SLIDERS = [
+  { id: "brightness", label: "Brightness", min: 0, max: 200, def: 100, unit: "%" },
+  { id: "contrast", label: "Contrast", min: 0, max: 200, def: 100, unit: "%" },
+  { id: "saturation", label: "Saturation", min: 0, max: 200, def: 100, unit: "%" },
+  { id: "hue", label: "Hue rotate", min: -180, max: 180, def: 0, unit: "°" },
+  { id: "sepia", label: "Sepia", min: 0, max: 100, def: 0, unit: "%" },
+  { id: "grayscale", label: "Grayscale", min: 0, max: 100, def: 0, unit: "%" },
+  { id: "blur", label: "Blur", min: 0, max: 20, def: 0, unit: "px" },
+  { id: "invert", label: "Invert", min: 0, max: 100, def: 0, unit: "%" },
+];
+
+const PRESETS = [
+  { id: "vivid", label: "Vivid", adj: { saturation: 140, contrast: 115 } },
+  { id: "mono", label: "Mono", adj: { saturation: 0, contrast: 110 } },
+  { id: "warm", label: "Warm", adj: { hue: -10, sepia: 30, contrast: 105 } },
+  { id: "cool", label: "Cool", adj: { hue: 15, saturation: 90 } },
+  { id: "dramatic", label: "Dramatic", adj: { contrast: 140, brightness: 95, saturation: 110 } },
+  { id: "soft", label: "Soft", adj: { contrast: 92, brightness: 105, blur: 0.5 } },
+];
+---
+
+<section id={id} class="tool-wrap-wide adjuster">
+  <div class="tool-shell elev-4">
+    <div
+      class="drop-zone"
+      id={`${id}-drop`}
+      role="button"
+      tabindex="0"
+      aria-label="Drop an image to adjust, or click to choose"
+    >
+      <div class="drop-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"/>
+          <line x1="4" y1="10" x2="4" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12" y2="3"/>
+          <line x1="20" y1="21" x2="20" y2="16"/>
+          <line x1="20" y1="12" x2="20" y2="3"/>
+          <line x1="1" y1="14" x2="7" y2="14"/>
+          <line x1="9" y1="8" x2="15" y2="8"/>
+          <line x1="17" y1="16" x2="23" y2="16"/>
+        </svg>
+      </div>
+      <h3 class="t-display-sm">Drop an image to tweak</h3>
+      <p class="t-body-sm drop-sub">or <span class="link-like">browse</span> — adjust colour, tone, and feel</p>
+      <p class="t-caption-mono drop-meta">100% client-side · no uploads · no size limit</p>
+      <input type="file" id={`${id}-input`} accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.tif,.tiff,image/*" hidden />
+    </div>
+
+    <div class="adjust-layout" id={`${id}-layout`} hidden>
+      <div class="preview-pane">
+        <div class="preview-stage" id={`${id}-stage`}>
+          <img class="preview-img" id={`${id}-img`} alt="Preview" />
+        </div>
+        <div class="ab-toggle" id={`${id}-ab-wrap`}>
+          <button type="button" class="ab-btn" id={`${id}-ab`} aria-pressed="false">
+            <span class="t-caption-mono">Hold to see original</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="controls-pane">
+        <div class="preset-row">
+          <span class="t-caption-mono preset-label">Presets</span>
+          <div class="preset-pills">
+            {PRESETS.map((p) => (
+              <button type="button" class="preset-pill" data-preset={p.id}>{p.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div class="sliders">
+          {SLIDERS.map((s) => (
+            <div class="slider-row" data-slider={s.id}>
+              <div class="slider-head">
+                <label class="t-body-sm slider-label" for={`${id}-s-${s.id}`}>{s.label}</label>
+                <span class="quality-value slider-value" id={`${id}-v-${s.id}`}>{s.def}{s.unit}</span>
+              </div>
+              <input
+                type="range"
+                class="range"
+                id={`${id}-s-${s.id}`}
+                min={s.min}
+                max={s.max}
+                value={s.def}
+                data-default={s.def}
+                step={s.id === "blur" ? "0.1" : "1"}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div class="controls-row">
+          <label class="control-label t-caption-mono">Output</label>
+          <div class="format-pills" role="radiogroup" aria-label="Output format">
+            {OUTPUT_FORMATS.map((f, i) => (
+              <button
+                type="button"
+                class="format-pill"
+                data-format={f.id}
+                role="radio"
+                aria-pressed={i === 0 ? "true" : "false"}
+              >{f.label}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar" id={`${id}-actions`} hidden>
+      <button type="button" class="btn-secondary-sm" id={`${id}-clear`}>Clear</button>
+      <button type="button" class="btn-secondary-sm" id={`${id}-reset`}>Reset all</button>
+      <div class="action-spacer"></div>
+      <button type="button" class="btn-secondary-sm" id={`${id}-replace`}>Replace image</button>
+      <button type="button" class="btn-primary" id={`${id}-apply`}>
+        <span class="btn-label">Apply & download</span>
+      </button>
+    </div>
+  </div>
+
+  <p class="tool-reassurance">
+    <strong>Your image never leaves this page.</strong> All adjustments happen in your browser.
+  </p>
+</section>
+
+<style>
+  .drop-icon {
+    width: 56px; height: 56px; border-radius: 999px;
+    background-color: var(--color-canvas);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--color-ink); margin-bottom: 16px;
+    border: 1px solid var(--color-hairline); flex-shrink: 0;
+  }
+  .drop-sub { color: var(--color-body); margin: 8px 0 6px; }
+  .drop-meta { color: var(--color-mute); margin-top: 8px; }
+  .link-like { color: var(--color-link); text-decoration: underline; text-underline-offset: 2px; }
+
+  .adjust-layout {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .preview-pane { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .preview-stage {
+    background-color: var(--color-canvas-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 360px;
+    overflow: hidden;
+    /* Checkerboard */
+    background-image:
+      linear-gradient(45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--color-canvas-soft-2) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--color-canvas-soft-2) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  }
+  .preview-img {
+    max-width: 100%;
+    max-height: 480px;
+    display: block;
+    transition: filter 0.08s ease;
+  }
+  .ab-toggle { display: flex; justify-content: center; }
+  .ab-btn {
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .ab-btn:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+  .ab-btn[aria-pressed="true"] { background-color: var(--color-ink); color: var(--color-on-primary); border-color: var(--color-ink); }
+
+  .controls-pane { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .preset-row { display: flex; flex-direction: column; gap: 8px; }
+  .preset-label { color: var(--color-mute); }
+  .preset-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .preset-pill {
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas); color: var(--color-body);
+    font-size: 12px; font-family: var(--font-mono); letter-spacing: 0.04em;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .preset-pill:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+  .preset-pill.is-active { background-color: var(--color-ink); color: var(--color-on-primary); border-color: var(--color-ink); }
+
+  .sliders { display: flex; flex-direction: column; gap: 14px; }
+  .slider-row { display: flex; flex-direction: column; gap: 8px; }
+  .slider-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .slider-label { color: var(--color-ink); font-weight: 500; }
+  .quality-value {
+    font-family: var(--font-mono); font-size: 12px; color: var(--color-body);
+    padding: 2px 8px; border-radius: 999px;
+    background-color: var(--color-canvas); border: 1px solid var(--color-hairline);
+  }
+  .slider-value.is-changed { background-color: var(--color-ink); color: var(--color-on-primary); border-color: var(--color-ink); }
+
+  .controls-row { display: flex; flex-direction: column; gap: 12px; }
+  .control-label { color: var(--color-mute); }
+  .format-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 880px) {
+    .adjust-layout { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  import {
+    decodeToCanvas,
+    applyAdjust,
+    buildCssFilter,
+    encodeRaster,
+    isImageFile,
+    inferFormatId,
+    replaceExt,
+  } from "../lib/image-ops.js";
+
+  document.querySelectorAll<HTMLElement>(".adjuster").forEach((root) => {
+    const id = root.querySelector<HTMLElement>("[id$='-drop']")?.id.replace("-drop", "");
+    if (!id) return;
+    const $ = <T extends HTMLElement = HTMLElement>(suffix: string) =>
+      document.getElementById(`${id}-${suffix}`) as T | null;
+
+    const drop = $("drop")!;
+    const input = $<HTMLInputElement>("input")!;
+    const layout = $("layout")!;
+    const img = $<HTMLImageElement>("img")!;
+    const actions = $("actions")!;
+    const clearBtn = $("clear")!;
+    const resetBtn = $("reset")!;
+    const replaceBtn = $("replace")!;
+    const applyBtn = $<HTMLButtonElement>("apply")!;
+    const abBtn = $<HTMLButtonElement>("ab")!;
+
+    type Adjust = {
+      brightness: number; contrast: number; saturation: number;
+      hue: number; sepia: number; grayscale: number; blur: number; invert: number;
+    };
+    const DEFAULT_ADJUST: Adjust = {
+      brightness: 100, contrast: 100, saturation: 100,
+      hue: 0, sepia: 0, grayscale: 0, blur: 0, invert: 0,
+    };
+    const state = {
+      file: null as File | null,
+      src: null as HTMLCanvasElement | null,
+      adj: { ...DEFAULT_ADJUST } as Adjust,
+      format: "png",
+    };
+
+    const sliders = Array.from(
+      root.querySelectorAll<HTMLInputElement>(".sliders .range"),
+    );
+    const sliderRows = Array.from(root.querySelectorAll<HTMLElement>(".slider-row"));
+
+    /* Drop / paste */
+    drop.addEventListener("click", () => input.click());
+    drop.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+    });
+    ["dragenter", "dragover"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.add("is-dragover"); }),
+    );
+    ["dragleave", "drop"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.remove("is-dragover"); }),
+    );
+    drop.addEventListener("drop", (e) => {
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt?.files?.length) loadFile(dt.files[0]);
+    });
+    input.addEventListener("change", () => { if (input.files?.length) loadFile(input.files[0]); input.value = ""; });
+    replaceBtn.addEventListener("click", () => input.click());
+    root.addEventListener("paste", (e) => {
+      const items = (e as ClipboardEvent).clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.kind === "file") {
+          const f = item.getAsFile();
+          if (f) { loadFile(f); break; }
+        }
+      }
+    });
+
+    /* Sliders */
+    sliders.forEach((sl) => {
+      sl.addEventListener("input", () => {
+        const key = sl.id.replace(`${id}-s-`, "") as keyof Adjust;
+        state.adj[key] = parseFloat(sl.value);
+        const val = $(`v-${key}`);
+        const row = sliderRows.find((r) => r.dataset.slider === key);
+        const unit = row?.querySelector<HTMLInputElement>(".range")?.dataset?.unit ?? "";
+        // Use the inline unit by reading data-default vs current; render with sensible unit
+        if (val) {
+          const num = key === "blur" ? sl.value : Math.round(parseFloat(sl.value));
+          val.textContent = formatValue(key, Number(num));
+          const def = parseFloat(sl.dataset.default || "0");
+          val.classList.toggle("is-changed", Number(num) !== def);
+        }
+        clearActivePreset();
+        applyPreviewFilter();
+      });
+    });
+
+    /* Output format pills */
+    root.querySelectorAll<HTMLButtonElement>(".format-pill[data-format]").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        root.querySelectorAll<HTMLButtonElement>(".format-pill[data-format]").forEach((p) => p.setAttribute("aria-pressed", "false"));
+        pill.setAttribute("aria-pressed", "true");
+        state.format = pill.dataset.format!;
+      });
+    });
+
+    /* Presets */
+    root.querySelectorAll<HTMLButtonElement>(".preset-pill").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        const id_ = pill.dataset.preset!;
+        const presets: Record<string, Partial<Adjust>> = {
+          vivid: { saturation: 140, contrast: 115 },
+          mono: { saturation: 0, contrast: 110 },
+          warm: { hue: -10, sepia: 30, contrast: 105 },
+          cool: { hue: 15, saturation: 90 },
+          dramatic: { contrast: 140, brightness: 95, saturation: 110 },
+          soft: { contrast: 92, brightness: 105, blur: 0.5 },
+        };
+        const p = presets[id_];
+        if (!p) return;
+        state.adj = { ...DEFAULT_ADJUST, ...p };
+        syncSlidersFromState();
+        root.querySelectorAll<HTMLElement>(".preset-pill").forEach((b) => b.classList.remove("is-active"));
+        pill.classList.add("is-active");
+        applyPreviewFilter();
+      });
+    });
+
+    clearActivePreset();
+
+    /* Buttons */
+    clearBtn.addEventListener("click", () => {
+      state.file = null; state.src = null; state.adj = { ...DEFAULT_ADJUST };
+      img.removeAttribute("src");
+      drop.hidden = false;
+      layout.hidden = true;
+      actions.hidden = true;
+    });
+    resetBtn.addEventListener("click", () => {
+      state.adj = { ...DEFAULT_ADJUST };
+      syncSlidersFromState();
+      clearActivePreset();
+      applyPreviewFilter();
+    });
+
+    abBtn.addEventListener("pointerdown", () => {
+      abBtn.setAttribute("aria-pressed", "true");
+      img.style.filter = "none";
+    });
+    const releaseAb = () => {
+      abBtn.setAttribute("aria-pressed", "false");
+      applyPreviewFilter();
+    };
+    abBtn.addEventListener("pointerup", releaseAb);
+    abBtn.addEventListener("pointerleave", releaseAb);
+    abBtn.addEventListener("pointercancel", releaseAb);
+
+    applyBtn.addEventListener("click", async () => {
+      if (!state.src) return;
+      applyBtn.disabled = true;
+      const labelEl = applyBtn.querySelector(".btn-label")!;
+      const original = labelEl.textContent;
+      labelEl.textContent = "Rendering…";
+      try {
+        const adjusted = applyAdjust(state.src, state.adj);
+        const blob = await encodeRaster(adjusted, {
+          format: state.format,
+          quality: 92,
+          background: "#ffffff",
+        });
+        const base = state.file ? replaceExt(state.file.name, state.format === "jpg" ? "jpg" : state.format) : `adjusted.${state.format}`;
+        const name = base.replace(/(\.[^.]+)$/, "-adjusted$1");
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        console.error(err);
+        alert("Render failed.");
+      } finally {
+        labelEl.textContent = original;
+        applyBtn.disabled = false;
+      }
+    });
+
+    async function loadFile(file: File) {
+      if (!isImageFile(file)) return;
+      try {
+        const src = await decodeToCanvas(file);
+        state.file = file;
+        state.src = src;
+        // Use a downscaled preview if the source is huge — keeps the page snappy.
+        const previewUrl = makePreviewUrl(src);
+        img.src = previewUrl;
+        drop.hidden = true;
+        layout.hidden = false;
+        actions.hidden = false;
+        state.adj = { ...DEFAULT_ADJUST };
+        syncSlidersFromState();
+        clearActivePreset();
+        applyPreviewFilter();
+      } catch (err: any) {
+        alert(`Could not decode that file: ${err?.message || "unknown error"}`);
+      }
+    }
+
+    function makePreviewUrl(src: HTMLCanvasElement) {
+      const maxSide = 1280;
+      const long = Math.max(src.width, src.height);
+      if (long <= maxSide) return src.toDataURL("image/png");
+      const scale = maxSide / long;
+      const c = document.createElement("canvas");
+      c.width = Math.round(src.width * scale);
+      c.height = Math.round(src.height * scale);
+      const ctx = c.getContext("2d")!;
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(src, 0, 0, c.width, c.height);
+      return c.toDataURL("image/png");
+    }
+
+    function syncSlidersFromState() {
+      sliders.forEach((sl) => {
+        const key = sl.id.replace(`${id}-s-`, "") as keyof Adjust;
+        sl.value = String(state.adj[key]);
+        const val = $(`v-${key}`);
+        if (val) {
+          val.textContent = formatValue(key, state.adj[key]);
+          const def = parseFloat(sl.dataset.default || "0");
+          val.classList.toggle("is-changed", state.adj[key] !== def);
+        }
+      });
+    }
+
+    function applyPreviewFilter() {
+      img.style.filter = buildCssFilter(state.adj) || "none";
+    }
+
+    function clearActivePreset() {
+      root.querySelectorAll<HTMLElement>(".preset-pill").forEach((b) => b.classList.remove("is-active"));
+    }
+
+    function formatValue(key: keyof Adjust, n: number) {
+      switch (key) {
+        case "hue": return `${n}°`;
+        case "blur": return `${n}px`;
+        default: return `${n}%`;
+      }
+    }
+  });
+</script>

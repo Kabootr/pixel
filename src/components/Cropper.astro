@@ -1,0 +1,608 @@
+---
+interface Props {
+  id?: string;
+}
+const { id = "cropper" } = Astro.props;
+
+const OUTPUT_FORMATS = [
+  { id: "png", label: "PNG" },
+  { id: "jpg", label: "JPG" },
+  { id: "webp", label: "WebP" },
+];
+
+const ASPECTS = [
+  { id: "free", label: "Free" },
+  { id: "1:1", label: "1:1" },
+  { id: "4:3", label: "4:3" },
+  { id: "3:2", label: "3:2" },
+  { id: "16:9", label: "16:9" },
+  { id: "9:16", label: "9:16" },
+  { id: "2:3", label: "2:3" },
+  { id: "3:4", label: "3:4" },
+];
+---
+
+<section id={id} class="tool-wrap-wide cropper">
+  <div class="tool-shell elev-4">
+    <div
+      class="drop-zone"
+      id={`${id}-drop`}
+      role="button"
+      tabindex="0"
+      aria-label="Drop an image to crop, or click to choose"
+    >
+      <div class="drop-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+          <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+        </svg>
+      </div>
+      <h3 class="t-display-sm">Drop an image to crop</h3>
+      <p class="t-body-sm drop-sub">or <span class="link-like">browse</span> — one image at a time</p>
+      <p class="t-caption-mono drop-meta">100% client-side · no uploads · no size limit</p>
+      <input type="file" id={`${id}-input`} accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.tif,.tiff,image/*" hidden />
+    </div>
+
+    <div class="crop-stage-wrap" id={`${id}-stage-wrap`} hidden>
+      <div class="crop-stage" id={`${id}-stage`}>
+        <canvas class="crop-canvas" id={`${id}-canvas`}></canvas>
+        <div class="crop-mask" id={`${id}-mask`}></div>
+        <div class="crop-rect" id={`${id}-rect`}>
+          <div class="crop-grid" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          {["nw", "n", "ne", "e", "se", "s", "sw", "w"].map((h) => (
+            <div class={`crop-handle h-${h}`} data-handle={h}></div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="controls" id={`${id}-controls`} hidden>
+      <div class="controls-row">
+        <label class="control-label t-caption-mono">Aspect ratio</label>
+        <div class="format-pills" role="radiogroup" aria-label="Aspect ratio">
+          {ASPECTS.map((a, i) => (
+            <button
+              type="button"
+              class="format-pill"
+              data-aspect={a.id}
+              role="radio"
+              aria-pressed={i === 0 ? "true" : "false"}
+            >{a.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div class="dims-row">
+        <div class="dim-field">
+          <label class="t-caption-mono dim-label" for={`${id}-x`}>X</label>
+          <input type="number" class="input dim-input" id={`${id}-x`} min="0" />
+        </div>
+        <div class="dim-field">
+          <label class="t-caption-mono dim-label" for={`${id}-y`}>Y</label>
+          <input type="number" class="input dim-input" id={`${id}-y`} min="0" />
+        </div>
+        <div class="dim-field">
+          <label class="t-caption-mono dim-label" for={`${id}-w`}>W</label>
+          <input type="number" class="input dim-input" id={`${id}-w`} min="1" />
+        </div>
+        <div class="dim-field">
+          <label class="t-caption-mono dim-label" for={`${id}-h`}>H</label>
+          <input type="number" class="input dim-input" id={`${id}-h`} min="1" />
+        </div>
+        <button type="button" class="btn-secondary-sm reset-btn" id={`${id}-reset`}>Reset</button>
+      </div>
+
+      <div class="controls-row">
+        <label class="control-label t-caption-mono">Output</label>
+        <div class="format-pills" role="radiogroup" aria-label="Output format">
+          {OUTPUT_FORMATS.map((f, i) => (
+            <button
+              type="button"
+              class="format-pill"
+              data-format={f.id}
+              role="radio"
+              aria-pressed={i === 0 ? "true" : "false"}
+            >{f.label}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar" id={`${id}-actions`} hidden>
+      <button type="button" class="btn-secondary-sm" id={`${id}-clear`}>Clear</button>
+      <div class="action-spacer"></div>
+      <button type="button" class="btn-secondary-sm" id={`${id}-replace`}>Replace image</button>
+      <button type="button" class="btn-primary" id={`${id}-apply`}>
+        <span class="btn-label">Crop & download</span>
+      </button>
+    </div>
+  </div>
+
+  <p class="tool-reassurance">
+    <strong>Your image never leaves this page.</strong> All cropping happens in your browser.
+  </p>
+</section>
+
+<style>
+  .drop-icon {
+    width: 56px; height: 56px; border-radius: 999px;
+    background-color: var(--color-canvas);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--color-ink); margin-bottom: 16px;
+    border: 1px solid var(--color-hairline); flex-shrink: 0;
+  }
+  .drop-sub { color: var(--color-body); margin: 8px 0 6px; }
+  .drop-meta { color: var(--color-mute); margin-top: 8px; }
+  .link-like { color: var(--color-link); text-decoration: underline; text-underline-offset: 2px; }
+
+  .crop-stage-wrap {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+    background-color: var(--color-canvas-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    /* Checkerboard for transparent images */
+    background-image:
+      linear-gradient(45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--color-canvas-soft-2) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--color-canvas-soft-2) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  }
+  .crop-stage {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    user-select: none;
+    touch-action: none;
+  }
+  .crop-canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  .crop-mask {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    /* Punched via clip-path set by JS */
+  }
+  :root[data-theme="dark"] .crop-mask {
+    background-color: rgba(0, 0, 0, 0.65);
+  }
+  .crop-rect {
+    position: absolute;
+    border: 1px solid #ffffff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+    cursor: move;
+  }
+  .crop-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .crop-grid span {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+  .crop-grid span:nth-child(1) { left: 33.333%; top: 0; bottom: 0; width: 1px; }
+  .crop-grid span:nth-child(2) { left: 66.667%; top: 0; bottom: 0; width: 1px; }
+  .crop-grid span:nth-child(3) { top: 33.333%; left: 0; right: 0; height: 1px; }
+  .crop-grid span:nth-child(4) { top: 66.667%; left: 0; right: 0; height: 1px; }
+
+  .crop-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #ffffff;
+    border: 1px solid #171717;
+    border-radius: 2px;
+  }
+  .h-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+  .h-n  { top: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+  .h-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+  .h-e  { top: 50%; right: -6px; transform: translateY(-50%); cursor: ew-resize; }
+  .h-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+  .h-s  { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+  .h-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+  .h-w  { top: 50%; left: -6px; transform: translateY(-50%); cursor: ew-resize; }
+
+  .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 20px; }
+  .controls-row { display: flex; flex-direction: column; gap: 12px; }
+  .control-label { color: var(--color-mute); }
+  .format-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .dims-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) auto;
+    gap: 8px;
+    align-items: end;
+  }
+  .dim-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .dim-label { color: var(--color-mute); }
+  .dim-input { font-family: var(--font-mono); }
+  .reset-btn { white-space: nowrap; }
+
+  @media (max-width: 600px) {
+    .dims-row { grid-template-columns: 1fr 1fr; }
+    .reset-btn { grid-column: span 2; }
+  }
+</style>
+
+<script>
+  import {
+    decodeToCanvas,
+    cropCanvas,
+    encodeRaster,
+    isImageFile,
+    inferFormatId,
+    replaceExt,
+  } from "../lib/image-ops.js";
+
+  document.querySelectorAll<HTMLElement>(".cropper").forEach((root) => {
+    const id = root.querySelector<HTMLElement>("[id$='-drop']")?.id.replace("-drop", "");
+    if (!id) return;
+    const $ = <T extends HTMLElement = HTMLElement>(suffix: string) =>
+      document.getElementById(`${id}-${suffix}`) as T | null;
+
+    const drop = $("drop")!;
+    const input = $<HTMLInputElement>("input")!;
+    const stageWrap = $("stage-wrap")!;
+    const stage = $("stage")!;
+    const canvas = $<HTMLCanvasElement>("canvas")!;
+    const mask = $("mask")!;
+    const rect = $("rect")!;
+    const controls = $("controls")!;
+    const actions = $("actions")!;
+    const xInput = $<HTMLInputElement>("x")!;
+    const yInput = $<HTMLInputElement>("y")!;
+    const wInput = $<HTMLInputElement>("w")!;
+    const hInput = $<HTMLInputElement>("h")!;
+    const resetBtn = $("reset")!;
+    const clearBtn = $("clear")!;
+    const replaceBtn = $("replace")!;
+    const applyBtn = $<HTMLButtonElement>("apply")!;
+
+    type State = {
+      file: File | null;
+      src: HTMLCanvasElement | null;
+      crop: { x: number; y: number; w: number; h: number };
+      aspect: number | null; // null = free
+      format: string;
+    };
+    const state: State = {
+      file: null,
+      src: null,
+      crop: { x: 0, y: 0, w: 0, h: 0 },
+      aspect: null,
+      format: "png",
+    };
+
+    /* Drop / paste */
+    drop.addEventListener("click", () => input.click());
+    drop.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+    });
+    ["dragenter", "dragover"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.add("is-dragover"); }),
+    );
+    ["dragleave", "drop"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.remove("is-dragover"); }),
+    );
+    drop.addEventListener("drop", (e) => {
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt?.files?.length) loadFile(dt.files[0]);
+    });
+    input.addEventListener("change", () => { if (input.files?.length) loadFile(input.files[0]); input.value = ""; });
+    replaceBtn.addEventListener("click", () => input.click());
+    root.addEventListener("paste", (e) => {
+      const items = (e as ClipboardEvent).clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.kind === "file") {
+          const f = item.getAsFile();
+          if (f) { loadFile(f); break; }
+        }
+      }
+    });
+
+    /* Aspect pills */
+    root.querySelectorAll<HTMLButtonElement>(".format-pill[data-aspect]").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        root.querySelectorAll<HTMLButtonElement>(".format-pill[data-aspect]").forEach((p) => p.setAttribute("aria-pressed", "false"));
+        pill.setAttribute("aria-pressed", "true");
+        const v = pill.dataset.aspect!;
+        if (v === "free") state.aspect = null;
+        else {
+          const [a, b] = v.split(":").map(Number);
+          state.aspect = a / b;
+          applyAspectToCrop();
+        }
+      });
+    });
+
+    /* Format pills */
+    root.querySelectorAll<HTMLButtonElement>(".format-pill[data-format]").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        root.querySelectorAll<HTMLButtonElement>(".format-pill[data-format]").forEach((p) => p.setAttribute("aria-pressed", "false"));
+        pill.setAttribute("aria-pressed", "true");
+        state.format = pill.dataset.format!;
+      });
+    });
+
+    /* Numeric inputs */
+    [xInput, yInput, wInput, hInput].forEach((el) => {
+      el.addEventListener("input", () => {
+        if (!state.src) return;
+        let x = clamp(parseInt(xInput.value, 10) || 0, 0, state.src.width - 1);
+        let y = clamp(parseInt(yInput.value, 10) || 0, 0, state.src.height - 1);
+        let w = clamp(parseInt(wInput.value, 10) || 1, 1, state.src.width - x);
+        let h = clamp(parseInt(hInput.value, 10) || 1, 1, state.src.height - y);
+        state.crop = { x, y, w, h };
+        drawCropOverlay();
+        syncInputsFromCrop();
+      });
+    });
+
+    resetBtn.addEventListener("click", resetCrop);
+    clearBtn.addEventListener("click", () => {
+      state.file = null;
+      state.src = null;
+      stageWrap.hidden = true;
+      controls.hidden = true;
+      actions.hidden = true;
+      // Re-show drop zone visually
+      drop.hidden = false;
+    });
+
+    applyBtn.addEventListener("click", async () => {
+      if (!state.src) return;
+      applyBtn.disabled = true;
+      const labelEl = applyBtn.querySelector(".btn-label")!;
+      const original = labelEl.textContent;
+      labelEl.textContent = "Cropping…";
+      try {
+        const cropped = cropCanvas(state.src, state.crop);
+        const blob = await encodeRaster(cropped, {
+          format: state.format,
+          quality: 92,
+          background: "#ffffff",
+        });
+        const base = state.file ? replaceExt(state.file.name, state.format === "jpg" ? "jpg" : state.format) : `crop.${state.format}`;
+        const name = base.replace(/(\.[^.]+)$/, "-crop$1");
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        console.error(err);
+        alert("Crop failed. The image may be too large for your browser to encode.");
+      } finally {
+        labelEl.textContent = original;
+        applyBtn.disabled = false;
+      }
+    });
+
+    /* ─── Load + initialise ─── */
+    async function loadFile(file: File) {
+      if (!isImageFile(file)) return;
+      try {
+        const src = await decodeToCanvas(file);
+        state.file = file;
+        state.src = src;
+        canvas.width = src.width;
+        canvas.height = src.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(src, 0, 0);
+        // Fit canvas inside the available stage width.
+        sizeCanvasToStage();
+        resetCrop();
+        drop.hidden = true;
+        stageWrap.hidden = false;
+        controls.hidden = false;
+        actions.hidden = false;
+      } catch (err: any) {
+        alert(`Could not decode that file: ${err?.message || "unknown error"}`);
+      }
+    }
+
+    function sizeCanvasToStage() {
+      if (!state.src) return;
+      const wrapWidth = stageWrap.clientWidth - 32; // padding
+      const maxDisplayW = Math.min(900, wrapWidth);
+      const scale = Math.min(1, maxDisplayW / state.src.width);
+      const displayW = Math.round(state.src.width * scale);
+      const displayH = Math.round(state.src.height * scale);
+      canvas.style.width = `${displayW}px`;
+      canvas.style.height = `${displayH}px`;
+    }
+
+    function resetCrop() {
+      if (!state.src) return;
+      if (state.aspect) {
+        // Centred crop matching aspect, max possible
+        const srcA = state.src.width / state.src.height;
+        let w: number, h: number;
+        if (state.aspect > srcA) {
+          w = state.src.width;
+          h = Math.round(w / state.aspect);
+        } else {
+          h = state.src.height;
+          w = Math.round(h * state.aspect);
+        }
+        state.crop = {
+          x: Math.round((state.src.width - w) / 2),
+          y: Math.round((state.src.height - h) / 2),
+          w, h,
+        };
+      } else {
+        state.crop = { x: 0, y: 0, w: state.src.width, h: state.src.height };
+      }
+      drawCropOverlay();
+      syncInputsFromCrop();
+    }
+
+    function applyAspectToCrop() {
+      if (!state.aspect || !state.src) return;
+      const c = state.crop;
+      // Try to keep the current width and adjust height; if that overflows, shrink the width.
+      let w = c.w;
+      let h = Math.round(w / state.aspect);
+      if (h > state.src.height - c.y) {
+        h = state.src.height - c.y;
+        w = Math.round(h * state.aspect);
+      }
+      if (w > state.src.width - c.x) {
+        w = state.src.width - c.x;
+        h = Math.round(w / state.aspect);
+      }
+      state.crop = { x: c.x, y: c.y, w, h };
+      drawCropOverlay();
+      syncInputsFromCrop();
+    }
+
+    function syncInputsFromCrop() {
+      xInput.value = String(state.crop.x);
+      yInput.value = String(state.crop.y);
+      wInput.value = String(state.crop.w);
+      hInput.value = String(state.crop.h);
+    }
+
+    function drawCropOverlay() {
+      if (!state.src) return;
+      const displayW = canvas.clientWidth;
+      const displayH = canvas.clientHeight;
+      if (!displayW || !displayH) return;
+      const scale = displayW / state.src.width;
+      // Make stage (and mask) match canvas display size
+      stage.style.width = `${displayW}px`;
+      stage.style.height = `${displayH}px`;
+      mask.style.left = "0";
+      mask.style.top = "0";
+      mask.style.width = `${displayW}px`;
+      mask.style.height = `${displayH}px`;
+      const left = state.crop.x * scale;
+      const top = state.crop.y * scale;
+      const w = state.crop.w * scale;
+      const h = state.crop.h * scale;
+      // Punch hole via clip-path (even-odd rule)
+      mask.style.clipPath = `polygon(
+        0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+        ${left}px ${top}px,
+        ${left}px ${top + h}px,
+        ${left + w}px ${top + h}px,
+        ${left + w}px ${top}px,
+        ${left}px ${top}px
+      )`;
+      rect.style.left = `${left}px`;
+      rect.style.top = `${top}px`;
+      rect.style.width = `${w}px`;
+      rect.style.height = `${h}px`;
+    }
+
+    /* ─── Pointer interaction (move + resize) ─── */
+    type DragMode = "move" | "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | null;
+    let dragMode: DragMode = null;
+    let dragStart = { px: 0, py: 0, c: { x: 0, y: 0, w: 0, h: 0 } };
+
+    rect.addEventListener("pointerdown", (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      const handle = target.dataset?.handle as DragMode | undefined;
+      dragMode = handle ?? "move";
+      dragStart = { px: e.clientX, py: e.clientY, c: { ...state.crop } };
+      (e.target as Element).setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    });
+    rect.addEventListener("pointermove", (e: PointerEvent) => {
+      if (!dragMode || !state.src) return;
+      const displayW = canvas.clientWidth;
+      const scale = displayW / state.src.width;
+      const dxPx = (e.clientX - dragStart.px) / scale;
+      const dyPx = (e.clientY - dragStart.py) / scale;
+      const c = { ...dragStart.c };
+      const sw = state.src.width;
+      const sh = state.src.height;
+
+      if (dragMode === "move") {
+        c.x = clamp(c.x + dxPx, 0, sw - c.w);
+        c.y = clamp(c.y + dyPx, 0, sh - c.h);
+      } else {
+        const fixedRight = dragStart.c.x + dragStart.c.w;
+        const fixedBottom = dragStart.c.y + dragStart.c.h;
+
+        if (dragMode.includes("e")) { c.w = clamp(dragStart.c.w + dxPx, 8, sw - c.x); }
+        if (dragMode.includes("w")) {
+          const newX = clamp(dragStart.c.x + dxPx, 0, fixedRight - 8);
+          c.x = newX; c.w = fixedRight - newX;
+        }
+        if (dragMode.includes("s")) { c.h = clamp(dragStart.c.h + dyPx, 8, sh - c.y); }
+        if (dragMode.includes("n")) {
+          const newY = clamp(dragStart.c.y + dyPx, 0, fixedBottom - 8);
+          c.y = newY; c.h = fixedBottom - newY;
+        }
+
+        if (state.aspect) {
+          // Maintain aspect: pick the axis the user dragged more and recompute the other.
+          if (dragMode === "e" || dragMode === "w") {
+            const newH = c.w / state.aspect;
+            if (dragMode.includes("n") || dragMode === "n") c.y = fixedBottom - newH;
+            else c.y = c.y; // unchanged anchor
+            c.h = newH;
+          } else if (dragMode === "n" || dragMode === "s") {
+            const newW = c.h * state.aspect;
+            c.x = c.x;
+            c.w = newW;
+          } else {
+            // Corner — let width drive
+            const newH = c.w / state.aspect;
+            if (dragMode.includes("n")) c.y = fixedBottom - newH;
+            c.h = newH;
+            // If h overflowed, shrink w
+            if (c.y < 0 || c.y + c.h > sh) {
+              const maxH = sh - (c.y < 0 ? 0 : c.y);
+              c.h = clamp(c.h, 8, maxH);
+              c.w = c.h * state.aspect;
+              if (dragMode.includes("w")) c.x = fixedRight - c.w;
+            }
+          }
+          // Clamp everything one more time
+          c.w = clamp(c.w, 8, sw - c.x);
+          c.h = clamp(c.h, 8, sh - c.y);
+        }
+      }
+      state.crop = {
+        x: Math.round(c.x),
+        y: Math.round(c.y),
+        w: Math.max(1, Math.round(c.w)),
+        h: Math.max(1, Math.round(c.h)),
+      };
+      drawCropOverlay();
+      syncInputsFromCrop();
+    });
+    const endDrag = (e: PointerEvent) => {
+      dragMode = null;
+      try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch {}
+    };
+    rect.addEventListener("pointerup", endDrag);
+    rect.addEventListener("pointercancel", endDrag);
+
+    /* Resize handling: re-fit canvas to container, re-render overlay */
+    const ro = new ResizeObserver(() => {
+      if (!state.src) return;
+      sizeCanvasToStage();
+      drawCropOverlay();
+    });
+    ro.observe(stageWrap);
+
+    function clamp(v: number, min: number, max: number) {
+      return Math.max(min, Math.min(max, v));
+    }
+  });
+</script>

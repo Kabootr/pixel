@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Hero from "../components/Hero.astro";
 import Converter from "../components/Converter.astro";
+import ToolsGrid from "../components/ToolsGrid.astro";
 import FeatureGrid from "../components/FeatureGrid.astro";
 import FormatGrid from "../components/FormatGrid.astro";
 import DarkBand from "../components/DarkBand.astro";
@@ -34,10 +35,13 @@ const jsonLd = [
     },
     featureList: [
       "Convert between PNG, JPG, WebP, GIF, SVG, ICO and TIFF",
+      "Resize images by percentage, exact pixels, or long-side fit",
+      "Compress JPG / PNG / WebP with auto-format picker",
+      "Crop with aspect-ratio presets (1:1, 16:9, 9:16, more)",
+      "Tweak brightness, contrast, saturation, hue, sepia and blur",
       "100% client-side — files never leave your browser",
-      "Batch / bulk conversion with single ZIP download",
+      "Batch / bulk processing with single ZIP download",
       "No upload, no signup, no file-size limit",
-      "Resize, quality control, EXIF metadata stripping",
       "Works offline once the page is loaded",
     ],
     browserRequirements: "Requires a modern browser with Canvas API support",
@@ -81,6 +85,7 @@ const jsonLd = [
   </Hero>
 
   <FeatureGrid />
+  <ToolsGrid />
   <FormatGrid />
   <DarkBand />
   <SeoContent />

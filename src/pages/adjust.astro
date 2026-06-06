@@ -1,0 +1,138 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import ColorAdjust from "../components/ColorAdjust.astro";
+import FAQ from "../components/FAQ.astro";
+import { toFaqPageSchema } from "../lib/faqData.js";
+
+const title = "Tweak Image Colors Online — Free, Private Browser Adjuster | PixelMorph";
+const description =
+  "Adjust brightness, contrast, saturation, hue, sepia, grayscale, blur and more — live preview, presets, and exact-match canvas export. No upload, no signup.";
+const keywords = [
+  "image color editor", "tweak image colors", "brightness contrast saturation",
+  "online image filter", "browser photo editor", "free color adjustment",
+  "private photo adjuster", "pixelmorph adjust", "hue rotate online",
+  "grayscale converter", "sepia filter", "image filter online",
+].join(", ");
+
+const siteUrl = "https://pixelmorph.app";
+const pageUrl = `${siteUrl}/adjust`;
+
+const faqs = [
+  {
+    q: "Does the adjuster upload my photo?",
+    a: "No. The image is decoded, filtered, and re-encoded entirely inside your browser. There is no upload step, no server, and no analytics on file contents.",
+  },
+  {
+    q: "Does the export match the preview exactly?",
+    a: "Yes. The preview applies a CSS filter string; the export uses the exact same filter on a canvas at full source resolution. The pixels are identical (modulo tiny rounding differences in how some browsers implement filter primitives).",
+  },
+  {
+    q: "What's the difference between Hue rotate and Saturation?",
+    a: "Saturation makes colours more or less intense without changing which colours they are. Hue rotate shifts every colour around the colour wheel by a number of degrees — a 60° shift turns red into yellow, blue into magenta, and so on. They compose: try high saturation with a small hue shift for a stylised look.",
+  },
+  {
+    q: "What do the presets do under the hood?",
+    a: "Each preset is just a curated combination of the slider values you see — Vivid bumps saturation and contrast, Mono zeroes saturation, Warm shifts hue red-ward and adds sepia, and so on. Tap a preset, then keep tweaking the sliders from there.",
+  },
+  {
+    q: "Will adjustments lose quality?",
+    a: "Some loss is inherent to lossy outputs (JPG, WebP). The processing itself is high-precision — Canvas filters work at full bit depth — but encoding the result to JPG at quality 92 will introduce typical JPG artifacts. For zero encoding loss, export to PNG.",
+  },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "PixelMorph Color Adjuster",
+    url: pageUrl,
+    applicationCategory: "MultimediaApplication",
+    applicationSubCategory: "Image Editor",
+    operatingSystem: "Any (browser-based)",
+    description,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Brightness, contrast, saturation, hue, sepia, grayscale, blur, invert sliders",
+      "Live CSS-filter preview at full fidelity",
+      "Six built-in style presets (Vivid, Mono, Warm, Cool, Dramatic, Soft)",
+      "Hold-to-compare A/B button",
+      "PNG, JPG, WebP output",
+      "100% client-side — files never leave your browser",
+    ],
+    browserRequirements: "Requires a modern browser with Canvas API support",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to adjust image colors online for free",
+    description: "Tweak brightness, contrast, saturation and more in your browser with PixelMorph.",
+    totalTime: "PT30S",
+    step: [
+      { "@type": "HowToStep", name: "Drop an image", text: "Drag-drop, click to browse, or paste from your clipboard." },
+      { "@type": "HowToStep", name: "Pick a preset or drag sliders", text: "Try a preset for an instant look, then fine-tune brightness, contrast, hue and other sliders." },
+      { "@type": "HowToStep", name: "Compare and download", text: "Hold the compare button to flash the original, then click Apply & download." },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "PixelMorph", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 2, name: "Adjust", item: pageUrl },
+    ],
+  },
+  toFaqPageSchema(faqs),
+];
+---
+
+<Layout title={title} description={description} keywords={keywords} jsonLd={jsonLd}>
+  <Hero
+    eyebrow="Adjust · Live · Private"
+    title="Tweak colours, live, without uploading."
+    subtitle="Brightness, contrast, saturation, hue, sepia, grayscale, blur. Six presets to start. Every change previews instantly — and stays on your machine."
+  >
+    <ColorAdjust id="adjust" />
+  </Hero>
+
+  <section class="page-container adjust-explain">
+    <div class="explain-grid">
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Live preview</span>
+        <h2 class="t-display-md">See the change as you drag.</h2>
+        <p class="t-body-md">Each slider updates the preview immediately via CSS filters — no waiting for a render queue. The export matches the preview pixel-for-pixel via the matching Canvas filter.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Hold to compare</span>
+        <h2 class="t-display-md">A/B against the original.</h2>
+        <p class="t-body-md">Press and hold the compare chip below the image — the preview flips back to the unmodified source until you let go. Trust your eyes, not the slider numbers.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Six presets</span>
+        <h2 class="t-display-md">Start from a vibe, then dial it in.</h2>
+        <p class="t-body-md">Vivid pops the colours, Mono strips them, Warm adds sepia warmth, Cool tilts blue, Dramatic crushes contrast, Soft softens it all. Tap one, then customise from there.</p>
+      </article>
+    </div>
+  </section>
+
+  <FAQ
+    items={faqs}
+    eyebrow="Adjust FAQs"
+    title="Adjustments, plain answers."
+  />
+</Layout>
+
+<style>
+  .adjust-explain { padding-top: 64px; }
+  .explain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .explain-card { display: flex; flex-direction: column; gap: 12px; }
+  .explain-eyebrow { color: var(--color-mute); }
+  @media (max-width: 860px) {
+    .explain-grid { grid-template-columns: 1fr; }
+    .adjust-explain { padding-top: 48px; }
+  }
+</style>

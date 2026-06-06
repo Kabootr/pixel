@@ -1,0 +1,138 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import Cropper from "../components/Cropper.astro";
+import FAQ from "../components/FAQ.astro";
+import { toFaqPageSchema } from "../lib/faqData.js";
+
+const title = "Crop Images Online — Free, Private Browser Cropper | PixelMorph";
+const description =
+  "Crop PNG, JPG, WebP and more in your browser. Free crop or lock to 1:1, 4:3, 16:9, 9:16 and other ratios. No upload, no signup, no file-size limit.";
+const keywords = [
+  "image cropper", "crop image online", "crop photo", "crop png", "crop jpg",
+  "free image cropper", "browser image cropper", "online image cropper no upload",
+  "private image cropper", "pixelmorph crop", "crop image aspect ratio",
+  "square crop", "16:9 crop", "instagram crop", "story crop",
+].join(", ");
+
+const siteUrl = "https://pixelmorph.app";
+const pageUrl = `${siteUrl}/crop`;
+
+const faqs = [
+  {
+    q: "Does cropping upload my image?",
+    a: "No. The image is decoded, cropped, and re-encoded entirely inside your browser using the Canvas API. There is no upload step, no server, and no analytics on file contents.",
+  },
+  {
+    q: "What's the difference between Free crop and a locked aspect ratio?",
+    a: "Free crop lets you drag any rectangle. A locked aspect ratio (like 1:1 or 16:9) makes the rectangle resize proportionally — useful for social-media formats that require an exact aspect, like Instagram squares or YouTube thumbnails.",
+  },
+  {
+    q: "Which aspect ratio is which?",
+    a: "1:1 is a square (Instagram feed). 4:3 is the classic camera ratio. 3:2 matches most DSLRs. 16:9 is widescreen (YouTube, monitors). 9:16 is portrait video (TikTok, Reels, Stories). 2:3 and 3:4 are common portrait print sizes.",
+  },
+  {
+    q: "Can I crop multiple images at once?",
+    a: "Not from this page — cropping is inherently per-image (you drag a rectangle on a specific picture). For bulk operations that don't need a per-image preview — resize, compress, or convert — use the dedicated tools for those.",
+  },
+  {
+    q: "Will the crop be exactly the dimensions I see?",
+    a: "Yes. The X / Y / W / H boxes show source-pixel coordinates, not display coordinates — the exported image will be exactly those dimensions, regardless of how big the preview is rendered on your screen.",
+  },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "PixelMorph Image Cropper",
+    url: pageUrl,
+    applicationCategory: "MultimediaApplication",
+    applicationSubCategory: "Image Cropper",
+    operatingSystem: "Any (browser-based)",
+    description,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Free crop or locked aspect ratios (1:1, 4:3, 3:2, 16:9, 9:16, 2:3, 3:4)",
+      "Interactive drag handles with rule-of-thirds grid",
+      "Numeric X / Y / W / H input boxes",
+      "PNG, JPG, WebP output",
+      "100% client-side — files never leave your browser",
+    ],
+    browserRequirements: "Requires a modern browser with Canvas API support",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to crop images online for free",
+    description: "Crop PNG, JPG and WebP in your browser with PixelMorph.",
+    totalTime: "PT20S",
+    step: [
+      { "@type": "HowToStep", name: "Drop an image", text: "Drag-drop, click to browse, or paste from your clipboard. One image at a time." },
+      { "@type": "HowToStep", name: "Pick an aspect ratio (optional)", text: "Free for any rectangle, or lock to 1:1, 4:3, 16:9, 9:16 or another preset." },
+      { "@type": "HowToStep", name: "Drag the crop rectangle", text: "Move the rectangle, drag corner / edge handles, or type exact pixel coordinates into the X / Y / W / H boxes." },
+      { "@type": "HowToStep", name: "Crop and download", text: "Pick an output format and click Crop & download." },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "PixelMorph", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 2, name: "Crop", item: pageUrl },
+    ],
+  },
+  toFaqPageSchema(faqs),
+];
+---
+
+<Layout title={title} description={description} keywords={keywords} jsonLd={jsonLd}>
+  <Hero
+    eyebrow="Crop · Private · Interactive"
+    title="Crop with the precision of an aspect lock."
+    subtitle="Drag handles, type exact dimensions, or pick a social-format ratio. Every pixel stays on your machine — no uploads, no signup."
+  >
+    <Cropper id="cropper" />
+  </Hero>
+
+  <section class="page-container crop-explain">
+    <div class="explain-grid">
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Free crop</span>
+        <h2 class="t-display-md">Any rectangle, any time.</h2>
+        <p class="t-body-md">Drag the corners and edges anywhere you want. The rule-of-thirds grid sits on top so you can frame the subject without guessing.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Locked aspect</span>
+        <h2 class="t-display-md">Pin to a social format.</h2>
+        <p class="t-body-md">1:1 for Instagram feed, 9:16 for Reels and TikTok, 16:9 for YouTube thumbnails. Locked ratios resize proportionally as you drag.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Numeric mode</span>
+        <h2 class="t-display-md">Type exact coordinates.</h2>
+        <p class="t-body-md">The X / Y / W / H boxes are live — type the exact crop you want and the rectangle moves to match. Useful for designed assets where pixels matter.</p>
+      </article>
+    </div>
+  </section>
+
+  <FAQ
+    items={faqs}
+    eyebrow="Crop FAQs"
+    title="Cropping, plain answers."
+  />
+</Layout>
+
+<style>
+  .crop-explain { padding-top: 64px; }
+  .explain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .explain-card { display: flex; flex-direction: column; gap: 12px; }
+  .explain-eyebrow { color: var(--color-mute); }
+  @media (max-width: 860px) {
+    .explain-grid { grid-template-columns: 1fr; }
+    .crop-explain { padding-top: 48px; }
+  }
+</style>

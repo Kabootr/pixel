@@ -29,19 +29,22 @@ const year = 2026;
       </div>
 
       <div class="footer-col">
-        <h4 class="t-caption-mono">Convert to</h4>
+        <h4 class="t-caption-mono">Tools</h4>
         <ul>
-          {FORMATS.map((f) => (
-            <li><a href={`/png-to-${f.id}`}>PNG → {f.label}</a></li>
-          ))}
+          <li><a href="/editor">Editor (all-in-one)</a></li>
+          <li><a href="/">Convert format</a></li>
+          <li><a href="/resize">Resize</a></li>
+          <li><a href="/compress">Compress</a></li>
+          <li><a href="/crop">Crop</a></li>
+          <li><a href="/adjust">Tweak colours</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h4 class="t-caption-mono">Convert from</h4>
+        <h4 class="t-caption-mono">Convert</h4>
         <ul>
           {FORMATS.map((f) => (
-            <li><a href={`/${f.id}-to-png`}>{f.label} → PNG</a></li>
+            <li><a href={`/png-to-${f.id}`}>PNG → {f.label}</a></li>
           ))}
         </ul>
       </div>
@@ -51,6 +54,7 @@ const year = 2026;
         <ul>
           <li><a href="/about">About</a></li>
           <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/#tools">All tools</a></li>
           <li><a href="/#formats">All formats</a></li>
           <li><a href="/sitemap-index.xml">Sitemap</a></li>
         </ul>

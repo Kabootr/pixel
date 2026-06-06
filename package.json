@@ -2,6 +2,32 @@
   "name": "pixelmorph",
   "type": "module",
   "version": "0.0.1",
+  "description": "Browser-native image toolkit — convert, resize, compress, crop, and tweak colours, all client-side. Local image library with backup/restore. No uploads, no signup, no limits.",
+  "homepage": "https://pixelmorph.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kabootr/pixel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kabootr/pixel/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "image-editor",
+    "image-converter",
+    "image-resizer",
+    "image-compressor",
+    "image-cropper",
+    "browser-only",
+    "client-side",
+    "astro",
+    "indexeddb",
+    "local-first",
+    "privacy",
+    "no-upload",
+    "pixelmorph",
+    "kabootr"
+  ],
   "engines": {
     "node": ">=22.12.0"
   },
@@ -19,6 +45,8 @@
     "@astrojs/sitemap": "^3.7.3",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.2",
+    "fflate": "^0.8.3",
+    "idb": "^8.0.3",
     "jszip": "^3.10.1",
     "tailwindcss": "^4.3.0",
     "utif": "^3.1.0"

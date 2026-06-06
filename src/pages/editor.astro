@@ -1,0 +1,1868 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FAQ from "../components/FAQ.astro";
+import { toFaqPageSchema } from "../lib/faqData.js";
+
+const title = "PixelMorph Editor — Browser-Native Image Studio";
+const description =
+  "All five PixelMorph tools in one canvas — crop, resize, compress, convert, and tweak colors. Save images to your local library that lives in your browser. Backup & restore as a zip.";
+const keywords = [
+  "image editor", "browser image editor", "free image editor",
+  "private image editor", "local-first image editor", "image studio online",
+  "indexeddb image library", "image backup", "pixelmorph editor",
+  "crop resize compress in one tool",
+].join(", ");
+
+const siteUrl = "https://pixelmorph.app";
+const pageUrl = `${siteUrl}/editor`;
+
+const ASPECTS = [
+  { id: "free", label: "Free" },
+  { id: "1:1", label: "1:1" },
+  { id: "4:3", label: "4:3" },
+  { id: "3:2", label: "3:2" },
+  { id: "16:9", label: "16:9" },
+  { id: "9:16", label: "9:16" },
+];
+
+const RESIZE_PRESETS = [
+  { label: "50%", mode: "percent", percent: 50 },
+  { label: "25%", mode: "percent", percent: 25 },
+  { label: "Long side 1080", mode: "fit", maxSide: 1080 },
+  { label: "Long side 1920", mode: "fit", maxSide: 1920 },
+];
+
+const ADJ_SLIDERS = [
+  { id: "brightness", label: "Brightness", min: 0, max: 200, def: 100, unit: "%" },
+  { id: "contrast", label: "Contrast", min: 0, max: 200, def: 100, unit: "%" },
+  { id: "saturation", label: "Saturation", min: 0, max: 200, def: 100, unit: "%" },
+  { id: "hue", label: "Hue rotate", min: -180, max: 180, def: 0, unit: "°" },
+  { id: "sepia", label: "Sepia", min: 0, max: 100, def: 0, unit: "%" },
+  { id: "grayscale", label: "Grayscale", min: 0, max: 100, def: 0, unit: "%" },
+  { id: "blur", label: "Blur", min: 0, max: 20, def: 0, unit: "px" },
+  { id: "invert", label: "Invert", min: 0, max: 100, def: 0, unit: "%" },
+];
+
+const ADJ_PRESETS = ["Vivid", "Mono", "Warm", "Cool", "Dramatic", "Soft"];
+
+const OUTPUT_FORMATS = [
+  { id: "png", label: "PNG" },
+  { id: "jpg", label: "JPG" },
+  { id: "webp", label: "WebP" },
+];
+
+const faqs = [
+  {
+    q: "Where are my saved images actually stored?",
+    a: "Inside this browser, in an IndexedDB database called \"pixelmorph\". Files never leave your machine — no upload, no server, no syncing. If you clear your browser data, the library is wiped. Use Backup to export a ZIP you can restore later.",
+  },
+  {
+    q: "Does saving to the library upload my image?",
+    a: "No. \"Save to library\" writes the image into your local IndexedDB only. The same is true for every edit you make in the editor.",
+  },
+  {
+    q: "What does Backup do?",
+    a: "Backup packages every image in your library plus a small manifest.json into a single ZIP that downloads to your device. Drop that ZIP into another browser (or after clearing data) via Import to restore the whole library.",
+  },
+  {
+    q: "How big can the library get?",
+    a: "Browsers typically give an origin 50% to 60% of available disk for IndexedDB. In practice that's tens of gigabytes on a modern laptop. PixelMorph shows current usage in the library header so you can keep an eye on it.",
+  },
+  {
+    q: "Why is the editor a single page instead of separate tools?",
+    a: "The editor is for the \"do several things to one image\" workflow — crop, then resize, then tweak colours, then export. The individual /crop, /resize, /compress and /adjust pages exist for focused single-task bulk work. Pick whichever matches what you're doing.",
+  },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "PixelMorph Editor",
+    url: pageUrl,
+    applicationCategory: "MultimediaApplication",
+    applicationSubCategory: "Image Editor",
+    operatingSystem: "Any (browser-based)",
+    description,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Five tools in one canvas — crop, resize, compress, convert, tweak colours",
+      "Local image library backed by IndexedDB",
+      "Backup and restore the entire library as a single ZIP",
+      "Search saved images by name",
+      "100% client-side — files never leave your browser",
+    ],
+    browserRequirements: "Requires a modern browser with IndexedDB and Canvas API support",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "PixelMorph", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 2, name: "Editor", item: pageUrl },
+    ],
+  },
+  toFaqPageSchema(faqs),
+];
+---
+
+<Layout title={title} description={description} keywords={keywords} jsonLd={jsonLd}>
+  <section class="editor-page">
+    <header class="editor-header page-container">
+      <div class="editor-title">
+        <span class="t-caption-mono editor-eyebrow">Editor · Private · Local-first</span>
+        <h1 class="t-display-md">One canvas. Five tools. Zero uploads.</h1>
+      </div>
+      <div class="editor-header-actions">
+        <button type="button" class="btn-secondary-sm" id="lib-import" title="Restore a backup">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import
+        </button>
+        <button type="button" class="btn-secondary-sm" id="lib-export" title="Backup library">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Backup
+        </button>
+      </div>
+    </header>
+
+    <div class="editor-shell page-container">
+      <!-- LIBRARY RAIL -->
+      <aside class="lib-rail">
+        <div class="lib-rail-head">
+          <div class="lib-head-row">
+            <h2 class="t-body-sm-strong">Your library</h2>
+            <button type="button" class="lib-add-btn" id="lib-add" title="Add image">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <p class="t-caption-mono lib-trust">
+            Saved locally · <span id="lib-usage">0 B</span>
+          </p>
+          <div class="lib-search">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" class="lib-search-input" id="lib-search" placeholder="Search library…" />
+          </div>
+        </div>
+
+        <div class="lib-grid" id="lib-grid">
+          <!-- empty state -->
+          <div class="lib-empty" id="lib-empty">
+            <span class="lib-empty-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+            </span>
+            <p class="t-body-sm">No images yet</p>
+            <p class="t-caption-mono lib-empty-hint">Drop one anywhere on the page to begin.</p>
+          </div>
+        </div>
+
+        <input type="file" id="lib-add-input" accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.tif,.tiff,image/*" multiple hidden />
+        <input type="file" id="lib-import-input" accept=".zip,application/zip" hidden />
+      </aside>
+
+      <!-- CENTER STAGE -->
+      <main class="stage-col">
+        <div class="stage-toolbar">
+          <span class="stage-name" id="stage-name" title="Click to rename">No image loaded</span>
+          <span class="stage-dims t-caption-mono" id="stage-dims"></span>
+          <div class="stage-toolbar-spacer"></div>
+          <button type="button" class="btn-secondary-sm" id="stage-reset" disabled>Reset</button>
+          <button type="button" class="btn-secondary-sm" id="stage-save" disabled>Save to library</button>
+          <button type="button" class="btn-primary stage-export" id="stage-export" disabled>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span class="btn-label">Export</span>
+          </button>
+        </div>
+
+        <div class="stage" id="stage">
+          <!-- empty state: full-stage drop zone -->
+          <div class="stage-empty" id="stage-empty">
+            <div class="drop-zone stage-drop" id="stage-drop" role="button" tabindex="0">
+              <div class="drop-icon">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <h3 class="t-display-sm">Drop an image, or pick from your library</h3>
+              <p class="t-body-sm drop-sub">
+                or <span class="link-like">browse</span> — PNG, JPG, WebP, GIF, SVG, TIFF
+              </p>
+              <p class="t-caption-mono drop-meta">
+                100% client-side · saved to your browser, never uploaded
+              </p>
+            </div>
+          </div>
+
+          <!-- canvas stage with crop overlay -->
+          <div class="stage-canvas-wrap" id="stage-canvas-wrap" hidden>
+            <div class="canvas-frame" id="canvas-frame">
+              <canvas class="stage-canvas" id="stage-canvas"></canvas>
+              <img class="stage-preview" id="stage-preview" alt="" />
+              <!-- Crop overlay (only visible in crop mode) -->
+              <div class="crop-mask" id="ed-crop-mask" hidden></div>
+              <div class="crop-rect" id="ed-crop-rect" hidden>
+                <div class="crop-grid" aria-hidden="true">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+                <div class="crop-handle h-nw" data-handle="nw"></div>
+                <div class="crop-handle h-n" data-handle="n"></div>
+                <div class="crop-handle h-ne" data-handle="ne"></div>
+                <div class="crop-handle h-e" data-handle="e"></div>
+                <div class="crop-handle h-se" data-handle="se"></div>
+                <div class="crop-handle h-s" data-handle="s"></div>
+                <div class="crop-handle h-sw" data-handle="sw"></div>
+                <div class="crop-handle h-w" data-handle="w"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- RIGHT TOOL PANEL -->
+      <aside class="tool-panel" id="tool-panel">
+        <div class="tool-tabs" role="tablist" aria-label="Editor mode">
+          {["crop", "resize", "adjust", "compress", "convert"].map((m, i) => (
+            <button
+              type="button"
+              class="tool-tab"
+              role="tab"
+              data-mode={m}
+              aria-selected={i === 0 ? "true" : "false"}
+            >{m.charAt(0).toUpperCase() + m.slice(1)}</button>
+          ))}
+        </div>
+
+        <!-- CROP MODE -->
+        <div class="mode-pane" data-pane="crop">
+          <span class="t-caption-mono pane-label">Aspect ratio</span>
+          <div class="format-pills">
+            {ASPECTS.map((a, i) => (
+              <button
+                type="button"
+                class="format-pill"
+                data-aspect={a.id}
+                aria-pressed={i === 0 ? "true" : "false"}
+              >{a.label}</button>
+            ))}
+          </div>
+          <div class="dims-row crop-dims">
+            <div class="dim-field"><label class="t-caption-mono dim-label" for="ed-crop-x">X</label><input type="number" class="input dim-input" id="ed-crop-x" min="0" /></div>
+            <div class="dim-field"><label class="t-caption-mono dim-label" for="ed-crop-y">Y</label><input type="number" class="input dim-input" id="ed-crop-y" min="0" /></div>
+            <div class="dim-field"><label class="t-caption-mono dim-label" for="ed-crop-w">W</label><input type="number" class="input dim-input" id="ed-crop-w" min="1" /></div>
+            <div class="dim-field"><label class="t-caption-mono dim-label" for="ed-crop-h">H</label><input type="number" class="input dim-input" id="ed-crop-h" min="1" /></div>
+          </div>
+          <div class="pane-actions">
+            <button type="button" class="btn-secondary-sm" id="ed-crop-reset">Reset rect</button>
+            <button type="button" class="btn-primary-sm" id="ed-crop-apply">Apply crop</button>
+          </div>
+        </div>
+
+        <!-- RESIZE MODE -->
+        <div class="mode-pane" data-pane="resize" hidden>
+          <span class="t-caption-mono pane-label">Resize mode</span>
+          <div class="format-pills">
+            <button type="button" class="format-pill" data-rmode="percent" aria-pressed="true">By %</button>
+            <button type="button" class="format-pill" data-rmode="px" aria-pressed="false">By pixels</button>
+            <button type="button" class="format-pill" data-rmode="fit" aria-pressed="false">Fit to box</button>
+          </div>
+
+          <div class="resize-field" data-rfield="percent">
+            <label class="t-body-sm pane-sublabel" for="ed-rs-percent">Scale <span class="quality-value" id="ed-rs-percent-value">100%</span></label>
+            <input type="range" id="ed-rs-percent" class="range" min="5" max="400" value="100" step="1" />
+          </div>
+          <div class="resize-field" data-rfield="px" hidden>
+            <label class="t-body-sm pane-sublabel">Dimensions</label>
+            <div class="px-row">
+              <input type="number" class="input" id="ed-rs-w" min="1" placeholder="W" />
+              <span class="px-x">×</span>
+              <input type="number" class="input" id="ed-rs-h" min="1" placeholder="H" />
+              <button type="button" class="lock-btn" id="ed-rs-lock" aria-pressed="true" title="Lock aspect ratio">
+                <svg class="lock-on" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                <svg class="lock-off" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="resize-field" data-rfield="fit" hidden>
+            <label class="t-body-sm pane-sublabel" for="ed-rs-fit">Max long side <span class="quality-value" id="ed-rs-fit-value">1920</span></label>
+            <input type="range" id="ed-rs-fit" class="range" min="64" max="8192" value="1920" step="32" />
+          </div>
+
+          <div class="preset-pills mt-12">
+            {RESIZE_PRESETS.map((p) => (
+              <button type="button" class="preset-pill" data-rpreset={JSON.stringify(p)}>{p.label}</button>
+            ))}
+          </div>
+
+          <div class="pane-actions">
+            <button type="button" class="btn-primary-sm" id="ed-rs-apply">Apply resize</button>
+          </div>
+        </div>
+
+        <!-- ADJUST MODE -->
+        <div class="mode-pane" data-pane="adjust" hidden>
+          <span class="t-caption-mono pane-label">Style presets</span>
+          <div class="preset-pills">
+            {ADJ_PRESETS.map((p) => (
+              <button type="button" class="preset-pill" data-apreset={p.toLowerCase()}>{p}</button>
+            ))}
+          </div>
+          <div class="sliders mt-12">
+            {ADJ_SLIDERS.map((s) => (
+              <div class="slider-row" data-slider={s.id}>
+                <div class="slider-head">
+                  <label class="t-body-sm slider-label" for={`ed-aj-${s.id}`}>{s.label}</label>
+                  <span class="quality-value slider-value" id={`ed-aj-v-${s.id}`}>{s.def}{s.unit}</span>
+                </div>
+                <input
+                  type="range"
+                  class="range"
+                  id={`ed-aj-${s.id}`}
+                  min={s.min}
+                  max={s.max}
+                  value={s.def}
+                  data-default={s.def}
+                  step={s.id === "blur" ? "0.1" : "1"}
+                />
+              </div>
+            ))}
+          </div>
+          <div class="pane-actions">
+            <button type="button" class="btn-secondary-sm" id="ed-aj-reset">Reset</button>
+            <button type="button" class="btn-primary-sm" id="ed-aj-apply">Apply adjustments</button>
+          </div>
+        </div>
+
+        <!-- COMPRESS MODE -->
+        <div class="mode-pane" data-pane="compress" hidden>
+          <span class="t-caption-mono pane-label">Export quality</span>
+          <div class="quality-row">
+            <label class="t-body-sm pane-sublabel" for="ed-cp-q">
+              Quality
+              <span class="quality-value" id="ed-cp-q-value">82</span>
+            </label>
+            <input type="range" id="ed-cp-q" class="range" min="10" max="100" value="82" step="1" />
+            <div class="quality-scale"><span>Tiny</span><span>Balanced</span><span>Lossless</span></div>
+          </div>
+          <p class="t-caption-mono pane-help">Affects JPG and WebP export. PNG is lossless.</p>
+          <div class="preset-pills mt-12">
+            <button type="button" class="preset-pill" data-cpreset="60">Tiny · q60</button>
+            <button type="button" class="preset-pill" data-cpreset="72">Small · q72</button>
+            <button type="button" class="preset-pill" data-cpreset="82">Balanced · q82</button>
+            <button type="button" class="preset-pill" data-cpreset="92">High · q92</button>
+          </div>
+          <p class="t-caption-mono pane-help mt-12">
+            Set quality, then hit Export. Compress doesn't modify the working image — it only changes the encode.
+          </p>
+        </div>
+
+        <!-- CONVERT MODE -->
+        <div class="mode-pane" data-pane="convert" hidden>
+          <span class="t-caption-mono pane-label">Export format</span>
+          <div class="format-pills" id="ed-cv-formats">
+            {OUTPUT_FORMATS.map((f, i) => (
+              <button type="button" class="format-pill" data-cformat={f.id} aria-pressed={i === 0 ? "true" : "false"}>{f.label}</button>
+            ))}
+          </div>
+          <p class="t-caption-mono pane-help">
+            Hit Export to download in the chosen format. Save to library re-saves using your current export settings.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Trust band -->
+    <section class="page-container editor-trust">
+      <p class="t-body-sm">
+        <strong>Your images never leave this page.</strong> The library is stored in your browser's IndexedDB.
+        Backup creates a ZIP with every image plus a small <code>manifest.json</code> — drop that ZIP back via Import to restore.
+      </p>
+    </section>
+
+    <FAQ
+      items={faqs}
+      eyebrow="Editor FAQs"
+      title="The editor & your library."
+    />
+  </section>
+
+  <!-- Toast container -->
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+</Layout>
+
+<style>
+  .editor-page { padding-bottom: 32px; }
+
+  .editor-header {
+    padding-top: 32px;
+    padding-bottom: 16px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .editor-eyebrow { color: var(--color-mute); display: block; margin-bottom: 6px; }
+  .editor-title h1 { margin: 0; }
+  .editor-header-actions { display: flex; gap: 8px; }
+
+  .editor-shell {
+    display: grid;
+    grid-template-columns: 280px 1fr 320px;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  /* ─── LIBRARY RAIL ─── */
+  .lib-rail {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    min-height: 580px;
+    max-height: 75vh;
+    overflow: hidden;
+  }
+  .lib-rail-head {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--color-hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .lib-head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .lib-trust { color: var(--color-mute); }
+  .lib-add-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lib-add-btn:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+
+  .lib-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .lib-search svg {
+    position: absolute;
+    left: 10px;
+    color: var(--color-mute);
+    pointer-events: none;
+  }
+  .lib-search-input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px 0 32px;
+    background-color: var(--color-canvas-soft);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--color-ink);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .lib-search-input:focus {
+    border-color: var(--color-ink);
+    box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.06);
+  }
+
+  .lib-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    align-content: start;
+  }
+
+  .lib-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 28px 16px;
+    color: var(--color-mute);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .lib-empty-icon {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas-soft);
+    color: var(--color-body);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lib-empty p { margin: 0; }
+  .lib-empty-hint { color: var(--color-mute); }
+
+  .lib-card {
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-canvas);
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .lib-card:hover { border-color: var(--color-hairline-strong); transform: translateY(-1px); }
+  .lib-card.is-active { border-color: var(--color-ink); box-shadow: 0 0 0 2px var(--color-ink); }
+  .lib-card .thumb-wrap {
+    aspect-ratio: 1 / 1;
+    background-color: var(--color-canvas-soft-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Checkerboard */
+    background-image:
+      linear-gradient(45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--color-canvas-soft-2) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--color-canvas-soft-2) 75%);
+    background-size: 12px 12px;
+    background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+  }
+  .lib-card .thumb-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .lib-card .meta {
+    padding: 6px 8px;
+    border-top: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+  }
+  .lib-card .name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 14px;
+  }
+  .lib-card .sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    letter-spacing: 0.02em;
+  }
+  .lib-card-overlay {
+    position: absolute;
+    inset: auto 0 30px 0;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+    background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .lib-card:hover .lib-card-overlay { opacity: 1; }
+  .lib-card-overlay button {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background-color: rgba(255,255,255,0.92);
+    color: #171717;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .lib-card-overlay button:hover { background-color: #fff; }
+  .lib-card-overlay button.danger:hover { background-color: var(--color-error); color: white; }
+
+  /* ─── STAGE ─── */
+  .stage-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 12px;
+  }
+  .stage-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+  }
+  .stage-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-ink);
+    cursor: text;
+    border-radius: var(--radius-xs);
+    padding: 2px 6px;
+    transition: background-color 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 30ch;
+  }
+  .stage-name:hover { background-color: var(--color-canvas-soft); }
+  .stage-name[contenteditable="true"] {
+    background-color: var(--color-canvas-soft);
+    outline: 1px solid var(--color-ink);
+  }
+  .stage-dims { color: var(--color-mute); }
+  .stage-toolbar-spacer { flex: 1; }
+  .stage-export { padding: 8px 14px; font-size: 14px; }
+
+  .stage {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    position: relative;
+  }
+  .stage-empty {
+    width: 100%;
+  }
+  .stage-drop {
+    background-color: var(--color-canvas-soft);
+    border: 1.5px dashed var(--color-hairline-strong);
+    padding: 56px 32px;
+  }
+  .stage-canvas-wrap {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Checkerboard */
+    background-image:
+      linear-gradient(45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--color-canvas-soft-2) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--color-canvas-soft-2) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--color-canvas-soft-2) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    border-radius: var(--radius-md);
+    padding: 12px;
+    max-height: 70vh;
+    overflow: auto;
+  }
+  .canvas-frame {
+    position: relative;
+    display: inline-block;
+    user-select: none;
+    touch-action: none;
+    max-width: 100%;
+  }
+  .stage-canvas { display: none; }
+  .stage-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+  }
+
+  /* Crop overlay */
+  .crop-mask {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0,0,0,0.45);
+    pointer-events: none;
+  }
+  .crop-rect {
+    position: absolute;
+    border: 1px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+    cursor: move;
+  }
+  .crop-grid { position: absolute; inset: 0; pointer-events: none; }
+  .crop-grid span { position: absolute; background-color: rgba(255,255,255,0.4); }
+  .crop-grid span:nth-child(1) { left: 33.333%; top: 0; bottom: 0; width: 1px; }
+  .crop-grid span:nth-child(2) { left: 66.667%; top: 0; bottom: 0; width: 1px; }
+  .crop-grid span:nth-child(3) { top: 33.333%; left: 0; right: 0; height: 1px; }
+  .crop-grid span:nth-child(4) { top: 66.667%; left: 0; right: 0; height: 1px; }
+  .crop-handle {
+    position: absolute;
+    width: 12px; height: 12px;
+    background-color: #fff;
+    border: 1px solid #171717;
+    border-radius: 2px;
+  }
+  .h-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+  .h-n  { top: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+  .h-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+  .h-e  { top: 50%; right: -6px; transform: translateY(-50%); cursor: ew-resize; }
+  .h-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+  .h-s  { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+  .h-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+  .h-w  { top: 50%; left: -6px; transform: translateY(-50%); cursor: ew-resize; }
+
+  /* ─── TOOL PANEL ─── */
+  .tool-panel {
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 580px;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+  .tool-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background-color: var(--color-canvas-soft);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    gap: 2px;
+  }
+  .tool-tab {
+    padding: 6px 4px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-body);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .tool-tab:hover { color: var(--color-ink); }
+  .tool-tab[aria-selected="true"] {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.04),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+
+  .mode-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pane-label { color: var(--color-mute); }
+  .pane-sublabel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+  .pane-help { color: var(--color-mute); }
+  .pane-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .format-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .preset-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .preset-pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .preset-pill:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+  .preset-pill.is-active { background-color: var(--color-ink); color: var(--color-on-primary); border-color: var(--color-ink); }
+  .mt-12 { margin-top: 12px; }
+
+  .quality-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-body);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+  }
+  .quality-row {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-canvas-soft);
+  }
+  .quality-scale {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 10px; color: var(--color-mute);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  .dims-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .dim-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .dim-label { color: var(--color-mute); }
+  .dim-input { font-family: var(--font-mono); height: 34px; }
+
+  .px-row { display: flex; align-items: center; gap: 6px; }
+  .px-row .input { flex: 1; min-width: 0; height: 34px; }
+  .px-x { font-family: var(--font-mono); color: var(--color-mute); }
+  .lock-btn {
+    width: 34px; height: 34px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lock-btn[aria-pressed="true"] { background-color: var(--color-ink); color: var(--color-on-primary); border-color: var(--color-ink); }
+  .lock-btn .lock-off { display: none; }
+  .lock-btn[aria-pressed="false"] .lock-on { display: none; }
+  .lock-btn[aria-pressed="false"] .lock-off { display: inline-block; }
+
+  .sliders { display: flex; flex-direction: column; gap: 12px; }
+  .slider-row { display: flex; flex-direction: column; gap: 6px; }
+  .slider-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .slider-label { color: var(--color-ink); font-weight: 500; }
+  .slider-value.is-changed { background-color: var(--color-ink); color: var(--color-on-primary); border-color: var(--color-ink); }
+
+  /* Trust */
+  .editor-trust {
+    margin-top: 32px;
+    text-align: center;
+    max-width: 720px;
+  }
+  .editor-trust p { color: var(--color-body); }
+  .editor-trust strong { color: var(--color-ink); font-weight: 500; }
+  .editor-trust code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background-color: var(--color-canvas-soft);
+    padding: 1px 6px;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--color-hairline);
+  }
+
+  /* Toast */
+  .toast-stack {
+    position: fixed;
+    top: 80px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 60;
+    pointer-events: none;
+  }
+  .toast {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 13px;
+    min-width: 220px;
+    max-width: 360px;
+    box-shadow:
+      0 8px 16px -4px rgba(0,0,0,0.12),
+      0 24px 32px -8px rgba(0,0,0,0.10);
+    pointer-events: auto;
+    transform: translateX(8px);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .toast.is-on { transform: translateX(0); opacity: 1; }
+  .toast.tone-success { border-left: 3px solid #0a8a3e; }
+  .toast.tone-error { border-left: 3px solid var(--color-error); }
+  .toast.tone-info { border-left: 3px solid var(--color-link); }
+
+  /* Drag-over state on the whole shell */
+  body.dragging-image .stage { outline: 2px dashed var(--color-ink); outline-offset: -4px; }
+
+  /* Mobile */
+  @media (max-width: 1100px) {
+    .editor-shell { grid-template-columns: 240px 1fr 280px; }
+  }
+  @media (max-width: 940px) {
+    .editor-shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+    }
+    .lib-rail, .tool-panel { min-height: 0; max-height: none; }
+    .lib-grid { grid-template-columns: repeat(4, 1fr); max-height: 240px; }
+  }
+  @media (max-width: 560px) {
+    .lib-grid { grid-template-columns: repeat(3, 1fr); }
+    .tool-tabs { grid-template-columns: repeat(3, 1fr); }
+    .tool-tab { padding: 8px 4px; }
+    .stage-drop { padding: 40px 16px; }
+    .stage { min-height: 360px; }
+    .editor-header { padding-top: 20px; }
+  }
+
+  .drop-icon {
+    width: 56px; height: 56px; border-radius: 999px;
+    background-color: var(--color-canvas);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--color-ink); margin-bottom: 16px;
+    border: 1px solid var(--color-hairline); flex-shrink: 0;
+  }
+  .drop-sub { color: var(--color-body); margin: 8px 0 6px; }
+  .drop-meta { color: var(--color-mute); margin-top: 8px; }
+  .link-like { color: var(--color-link); text-decoration: underline; text-underline-offset: 2px; }
+</style>
+
+<script>
+  import {
+    decodeToCanvas,
+    resizeCanvas,
+    cropCanvas,
+    applyAdjust,
+    buildCssFilter,
+    encodeRaster,
+    humanFileSize,
+    isImageFile,
+    inferFormatId,
+    replaceExt,
+    rasterExtFor,
+  } from "../lib/image-ops.js";
+  import {
+    listImages,
+    getImage,
+    addImage,
+    updateImage,
+    deleteImage,
+    storageUsage,
+    makeThumbnail,
+  } from "../lib/storage.js";
+  import { exportLibrary, importLibrary } from "../lib/backup.js";
+
+  /* ─────────── Toast helper ─────────── */
+  function toast(message: string, tone: "success" | "error" | "info" = "info") {
+    const stack = document.getElementById("toast-stack");
+    if (!stack) return;
+    const el = document.createElement("div");
+    el.className = `toast tone-${tone}`;
+    el.textContent = message;
+    stack.appendChild(el);
+    requestAnimationFrame(() => el.classList.add("is-on"));
+    setTimeout(() => {
+      el.classList.remove("is-on");
+      setTimeout(() => el.remove(), 250);
+    }, 2800);
+  }
+
+  /* ─────────── DOM refs ─────────── */
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T | null;
+
+  const stage = $("stage")!;
+  const stageEmpty = $("stage-empty")!;
+  const stageDrop = $("stage-drop")!;
+  const canvasWrap = $("stage-canvas-wrap")!;
+  const canvasFrame = $("canvas-frame")!;
+  const stageCanvas = $<HTMLCanvasElement>("stage-canvas")!;
+  const stagePreview = $<HTMLImageElement>("stage-preview")!;
+  const stageName = $("stage-name")!;
+  const stageDims = $("stage-dims")!;
+  const stageReset = $<HTMLButtonElement>("stage-reset")!;
+  const stageSave = $<HTMLButtonElement>("stage-save")!;
+  const stageExport = $<HTMLButtonElement>("stage-export")!;
+  const cropMask = $("ed-crop-mask")!;
+  const cropRect = $("ed-crop-rect")!;
+  const libGrid = $("lib-grid")!;
+  const libEmpty = $("lib-empty")!;
+  const libUsage = $("lib-usage")!;
+  const libAdd = $("lib-add")!;
+  const libAddInput = $<HTMLInputElement>("lib-add-input")!;
+  const libExport = $("lib-export")!;
+  const libImport = $("lib-import")!;
+  const libImportInput = $<HTMLInputElement>("lib-import-input")!;
+  const libSearch = $<HTMLInputElement>("lib-search")!;
+
+  /* ─────────── State ─────────── */
+  type Adjust = {
+    brightness: number; contrast: number; saturation: number;
+    hue: number; sepia: number; grayscale: number; blur: number; invert: number;
+  };
+  const DEFAULT_ADJUST: Adjust = {
+    brightness: 100, contrast: 100, saturation: 100,
+    hue: 0, sepia: 0, grayscale: 0, blur: 0, invert: 0,
+  };
+
+  type State = {
+    mode: "crop" | "resize" | "adjust" | "compress" | "convert";
+    currentId: string | null;   // id in library, null if unsaved
+    name: string;
+    original: HTMLCanvasElement | null; // immutable source
+    working: HTMLCanvasElement | null;  // current after applied edits
+    crop: { x: number; y: number; w: number; h: number };
+    cropAspect: number | null;
+    adj: Adjust;                 // current preview/applied
+    appliedAdj: Adjust;          // baseline (used for non-destructive reset)
+    exportFormat: string;
+    exportQuality: number;
+    librarySearch: string;
+    library: any[];              // list of meta
+  };
+
+  const state: State = {
+    mode: "crop",
+    currentId: null,
+    name: "Untitled",
+    original: null,
+    working: null,
+    crop: { x: 0, y: 0, w: 0, h: 0 },
+    cropAspect: null,
+    adj: { ...DEFAULT_ADJUST },
+    appliedAdj: { ...DEFAULT_ADJUST },
+    exportFormat: "png",
+    exportQuality: 82,
+    librarySearch: "",
+    library: [],
+  };
+
+  /* ─────────── Helpers ─────────── */
+  function clamp(v: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function downloadBlob(blob: Blob, name: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function updateStageBadges() {
+    stageName.textContent = state.name || "Untitled";
+    if (state.working) {
+      stageDims.textContent = `${state.working.width}×${state.working.height} · ${state.working === state.original ? "original" : "edited"}`;
+    } else {
+      stageDims.textContent = "";
+    }
+    const has = !!state.working;
+    stageReset.disabled = !has;
+    stageSave.disabled = !has;
+    stageExport.disabled = !has;
+  }
+
+  function showStageEmpty(empty: boolean) {
+    stageEmpty.hidden = !empty;
+    canvasWrap.hidden = empty;
+  }
+
+  function updatePreviewFromWorking() {
+    if (!state.working) return;
+    // Use a downscaled data URL for the preview img to keep DOM cheap.
+    const previewUrl = makePreviewUrl(state.working);
+    stagePreview.src = previewUrl;
+    // After the image actually paints, refresh crop overlay positions.
+    stagePreview.onload = () => requestAnimationFrame(refreshCropOverlay);
+  }
+
+  function makePreviewUrl(src: HTMLCanvasElement) {
+    const maxSide = 1600;
+    const long = Math.max(src.width, src.height);
+    if (long <= maxSide) return src.toDataURL("image/png");
+    const scale = maxSide / long;
+    const c = document.createElement("canvas");
+    c.width = Math.round(src.width * scale);
+    c.height = Math.round(src.height * scale);
+    const ctx = c.getContext("2d")!;
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(src, 0, 0, c.width, c.height);
+    return c.toDataURL("image/png");
+  }
+
+  function applyPreviewFilter() {
+    stagePreview.style.filter = buildCssFilter(state.adj) || "none";
+  }
+
+  /* ─────────── Load image into stage ─────────── */
+  async function loadImageFile(file: File) {
+    if (!isImageFile(file)) {
+      toast("That's not an image we recognise.", "error");
+      return;
+    }
+    try {
+      const src = await decodeToCanvas(file);
+      state.original = src;
+      state.working = src;
+      state.name = file.name;
+      state.currentId = null;
+      state.adj = { ...DEFAULT_ADJUST };
+      state.appliedAdj = { ...DEFAULT_ADJUST };
+      state.exportFormat = pickFormatForSrc(file);
+      syncControlsFromState();
+      showStageEmpty(false);
+      updateStageBadges();
+      updatePreviewFromWorking();
+      applyPreviewFilter();
+      resetCropToFull();
+      if (state.mode === "crop") refreshCropOverlay();
+      markActiveLibCard();
+    } catch (err: any) {
+      toast(err?.message || "Could not decode that file.", "error");
+    }
+  }
+
+  async function loadFromLibrary(id: string) {
+    const rec = await getImage(id);
+    if (!rec) return;
+    const file = new File([rec.blob], rec.name, { type: rec.blob.type || `image/${rec.format}` });
+    await loadImageFile(file);
+    state.currentId = id;
+    state.name = rec.name;
+    updateStageBadges();
+    markActiveLibCard();
+  }
+
+  function pickFormatForSrc(file: File) {
+    const ext = inferFormatId(file);
+    if (["png", "jpg", "webp"].includes(ext)) return ext;
+    return "png";
+  }
+
+  /* ─────────── Mode switching ─────────── */
+  document.querySelectorAll<HTMLButtonElement>(".tool-tab").forEach((btn) => {
+    btn.addEventListener("click", () => switchMode(btn.dataset.mode as State["mode"]));
+  });
+
+  function switchMode(mode: State["mode"]) {
+    state.mode = mode;
+    document.querySelectorAll<HTMLButtonElement>(".tool-tab").forEach((b) => {
+      b.setAttribute("aria-selected", String(b.dataset.mode === mode));
+    });
+    document.querySelectorAll<HTMLElement>(".mode-pane").forEach((p) => {
+      p.hidden = p.dataset.pane !== mode;
+    });
+    const cropOn = mode === "crop" && !!state.working;
+    cropMask.hidden = !cropOn;
+    cropRect.hidden = !cropOn;
+    if (cropOn) requestAnimationFrame(refreshCropOverlay);
+  }
+
+  /* ─────────── CROP mode ─────────── */
+  const cropXEl = $<HTMLInputElement>("ed-crop-x")!;
+  const cropYEl = $<HTMLInputElement>("ed-crop-y")!;
+  const cropWEl = $<HTMLInputElement>("ed-crop-w")!;
+  const cropHEl = $<HTMLInputElement>("ed-crop-h")!;
+
+  document.querySelectorAll<HTMLButtonElement>(".format-pill[data-aspect]").forEach((p) => {
+    p.addEventListener("click", () => {
+      document.querySelectorAll<HTMLButtonElement>(".format-pill[data-aspect]").forEach((q) => q.setAttribute("aria-pressed", "false"));
+      p.setAttribute("aria-pressed", "true");
+      const v = p.dataset.aspect!;
+      if (v === "free") state.cropAspect = null;
+      else {
+        const [a, b] = v.split(":").map(Number);
+        state.cropAspect = a / b;
+        applyAspectToCrop();
+      }
+    });
+  });
+  [cropXEl, cropYEl, cropWEl, cropHEl].forEach((el) => {
+    el.addEventListener("input", () => {
+      if (!state.working) return;
+      const x = clamp(parseInt(cropXEl.value, 10) || 0, 0, state.working.width - 1);
+      const y = clamp(parseInt(cropYEl.value, 10) || 0, 0, state.working.height - 1);
+      const w = clamp(parseInt(cropWEl.value, 10) || 1, 1, state.working.width - x);
+      const h = clamp(parseInt(cropHEl.value, 10) || 1, 1, state.working.height - y);
+      state.crop = { x, y, w, h };
+      refreshCropOverlay();
+      syncCropInputs();
+    });
+  });
+
+  $("ed-crop-reset")!.addEventListener("click", resetCropToFull);
+  $("ed-crop-apply")!.addEventListener("click", () => {
+    if (!state.working) return;
+    const cropped = cropCanvas(state.working, state.crop);
+    state.working = cropped;
+    state.appliedAdj = { ...state.adj };
+    updateStageBadges();
+    updatePreviewFromWorking();
+    resetCropToFull();
+    toast("Crop applied to working image.", "success");
+  });
+
+  function resetCropToFull() {
+    if (!state.working) return;
+    if (state.cropAspect) {
+      const srcA = state.working.width / state.working.height;
+      let w, h;
+      if (state.cropAspect > srcA) { w = state.working.width; h = Math.round(w / state.cropAspect); }
+      else { h = state.working.height; w = Math.round(h * state.cropAspect); }
+      state.crop = {
+        x: Math.round((state.working.width - w) / 2),
+        y: Math.round((state.working.height - h) / 2),
+        w, h,
+      };
+    } else {
+      state.crop = { x: 0, y: 0, w: state.working.width, h: state.working.height };
+    }
+    syncCropInputs();
+    refreshCropOverlay();
+  }
+
+  function applyAspectToCrop() {
+    if (!state.working || !state.cropAspect) return;
+    const c = state.crop;
+    let w = c.w;
+    let h = Math.round(w / state.cropAspect);
+    if (h > state.working.height - c.y) {
+      h = state.working.height - c.y;
+      w = Math.round(h * state.cropAspect);
+    }
+    if (w > state.working.width - c.x) {
+      w = state.working.width - c.x;
+      h = Math.round(w / state.cropAspect);
+    }
+    state.crop = { x: c.x, y: c.y, w, h };
+    syncCropInputs();
+    refreshCropOverlay();
+  }
+
+  function syncCropInputs() {
+    cropXEl.value = String(state.crop.x);
+    cropYEl.value = String(state.crop.y);
+    cropWEl.value = String(state.crop.w);
+    cropHEl.value = String(state.crop.h);
+  }
+
+  function refreshCropOverlay() {
+    if (!state.working || state.mode !== "crop") return;
+    const dispW = stagePreview.clientWidth;
+    const dispH = stagePreview.clientHeight;
+    if (!dispW || !dispH) return;
+    // Place mask + rect within canvasFrame which is sized to the preview
+    canvasFrame.style.width = `${dispW}px`;
+    canvasFrame.style.height = `${dispH}px`;
+    const scale = dispW / state.working.width;
+    const left = state.crop.x * scale;
+    const top = state.crop.y * scale;
+    const w = state.crop.w * scale;
+    const h = state.crop.h * scale;
+    cropMask.style.width = `${dispW}px`;
+    cropMask.style.height = `${dispH}px`;
+    cropMask.style.clipPath = `polygon(
+      0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+      ${left}px ${top}px,
+      ${left}px ${top + h}px,
+      ${left + w}px ${top + h}px,
+      ${left + w}px ${top}px,
+      ${left}px ${top}px
+    )`;
+    cropRect.style.left = `${left}px`;
+    cropRect.style.top = `${top}px`;
+    cropRect.style.width = `${w}px`;
+    cropRect.style.height = `${h}px`;
+  }
+
+  // Crop drag interaction
+  type DragMode = "move" | "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | null;
+  let dragMode: DragMode = null;
+  let dragStart = { px: 0, py: 0, c: { x: 0, y: 0, w: 0, h: 0 } };
+  cropRect.addEventListener("pointerdown", (e: PointerEvent) => {
+    const target = e.target as HTMLElement;
+    const handle = target.dataset?.handle as DragMode | undefined;
+    dragMode = handle ?? "move";
+    dragStart = { px: e.clientX, py: e.clientY, c: { ...state.crop } };
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  });
+  cropRect.addEventListener("pointermove", (e: PointerEvent) => {
+    if (!dragMode || !state.working) return;
+    const scale = stagePreview.clientWidth / state.working.width;
+    const dx = (e.clientX - dragStart.px) / scale;
+    const dy = (e.clientY - dragStart.py) / scale;
+    const c = { ...dragStart.c };
+    const sw = state.working.width;
+    const sh = state.working.height;
+
+    if (dragMode === "move") {
+      c.x = clamp(c.x + dx, 0, sw - c.w);
+      c.y = clamp(c.y + dy, 0, sh - c.h);
+    } else {
+      const fixedR = dragStart.c.x + dragStart.c.w;
+      const fixedB = dragStart.c.y + dragStart.c.h;
+      if (dragMode.includes("e")) c.w = clamp(dragStart.c.w + dx, 8, sw - c.x);
+      if (dragMode.includes("w")) {
+        const nx = clamp(dragStart.c.x + dx, 0, fixedR - 8);
+        c.x = nx; c.w = fixedR - nx;
+      }
+      if (dragMode.includes("s")) c.h = clamp(dragStart.c.h + dy, 8, sh - c.y);
+      if (dragMode.includes("n")) {
+        const ny = clamp(dragStart.c.y + dy, 0, fixedB - 8);
+        c.y = ny; c.h = fixedB - ny;
+      }
+      if (state.cropAspect) {
+        if (dragMode === "e" || dragMode === "w") {
+          c.h = c.w / state.cropAspect;
+        } else if (dragMode === "n" || dragMode === "s") {
+          c.w = c.h * state.cropAspect;
+        } else {
+          const newH = c.w / state.cropAspect;
+          if (dragMode.includes("n")) c.y = fixedB - newH;
+          c.h = newH;
+        }
+        c.w = clamp(c.w, 8, sw - c.x);
+        c.h = clamp(c.h, 8, sh - c.y);
+      }
+    }
+    state.crop = {
+      x: Math.round(c.x),
+      y: Math.round(c.y),
+      w: Math.max(1, Math.round(c.w)),
+      h: Math.max(1, Math.round(c.h)),
+    };
+    refreshCropOverlay();
+    syncCropInputs();
+  });
+  const endDrag = (e: PointerEvent) => {
+    dragMode = null;
+    try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch {}
+  };
+  cropRect.addEventListener("pointerup", endDrag);
+  cropRect.addEventListener("pointercancel", endDrag);
+
+  /* ─────────── RESIZE mode ─────────── */
+  const rsPercent = $<HTMLInputElement>("ed-rs-percent")!;
+  const rsPercentVal = $("ed-rs-percent-value")!;
+  const rsW = $<HTMLInputElement>("ed-rs-w")!;
+  const rsH = $<HTMLInputElement>("ed-rs-h")!;
+  const rsLock = $("ed-rs-lock")!;
+  const rsFit = $<HTMLInputElement>("ed-rs-fit")!;
+  const rsFitVal = $("ed-rs-fit-value")!;
+
+  let rsMode: "percent" | "px" | "fit" = "percent";
+  let rsAspectLock = true;
+  let rsLastEdited: "w" | "h" = "w";
+
+  document.querySelectorAll<HTMLButtonElement>(".format-pill[data-rmode]").forEach((p) => {
+    p.addEventListener("click", () => {
+      document.querySelectorAll<HTMLButtonElement>(".format-pill[data-rmode]").forEach((q) => q.setAttribute("aria-pressed", "false"));
+      p.setAttribute("aria-pressed", "true");
+      rsMode = p.dataset.rmode as any;
+      document.querySelectorAll<HTMLElement>(".resize-field").forEach((el) => {
+        el.hidden = el.dataset.rfield !== rsMode;
+      });
+    });
+  });
+  rsPercent.addEventListener("input", () => { rsPercentVal.textContent = `${rsPercent.value}%`; });
+  rsFit.addEventListener("input", () => { rsFitVal.textContent = String(rsFit.value); });
+  rsLock.addEventListener("click", () => {
+    rsAspectLock = !rsAspectLock;
+    rsLock.setAttribute("aria-pressed", String(rsAspectLock));
+  });
+  rsW.addEventListener("input", () => {
+    rsLastEdited = "w";
+    if (rsAspectLock && state.working) {
+      const ratio = state.working.width / state.working.height;
+      const w = parseInt(rsW.value, 10);
+      if (w > 0) rsH.value = String(Math.round(w / ratio));
+    }
+  });
+  rsH.addEventListener("input", () => {
+    rsLastEdited = "h";
+    if (rsAspectLock && state.working) {
+      const ratio = state.working.width / state.working.height;
+      const h = parseInt(rsH.value, 10);
+      if (h > 0) rsW.value = String(Math.round(h * ratio));
+    }
+  });
+  document.querySelectorAll<HTMLButtonElement>(".preset-pill[data-rpreset]").forEach((p) => {
+    p.addEventListener("click", () => {
+      const cfg = JSON.parse(p.dataset.rpreset!);
+      if (cfg.mode === "percent") {
+        rsMode = "percent";
+        rsPercent.value = String(cfg.percent);
+        rsPercentVal.textContent = `${cfg.percent}%`;
+      } else if (cfg.mode === "fit") {
+        rsMode = "fit";
+        rsFit.value = String(cfg.maxSide);
+        rsFitVal.textContent = String(cfg.maxSide);
+      }
+      document.querySelectorAll<HTMLButtonElement>(".format-pill[data-rmode]").forEach((q) => q.setAttribute("aria-pressed", String(q.dataset.rmode === rsMode)));
+      document.querySelectorAll<HTMLElement>(".resize-field").forEach((el) => { el.hidden = el.dataset.rfield !== rsMode; });
+    });
+  });
+  $("ed-rs-apply")!.addEventListener("click", () => {
+    if (!state.working) return;
+    let opts: any = undefined;
+    if (rsMode === "percent") {
+      const p = parseInt(rsPercent.value, 10);
+      if (!p || p === 100) { toast("Resize is 100% — nothing to apply.", "info"); return; }
+      opts = { mode: "percent", percent: p };
+    } else if (rsMode === "px") {
+      const w = parseInt(rsW.value, 10) || undefined;
+      const h = parseInt(rsH.value, 10) || undefined;
+      if (!w && !h) { toast("Set a target width or height.", "info"); return; }
+      if (rsAspectLock) opts = rsLastEdited === "w" ? { mode: "px", width: w } : { mode: "px", height: h };
+      else opts = { mode: "px", width: w, height: h };
+    } else if (rsMode === "fit") {
+      const m = parseInt(rsFit.value, 10);
+      if (!m) { toast("Set a max side.", "info"); return; }
+      opts = { mode: "fit", maxSide: m };
+    }
+    const resized = resizeCanvas(state.working, opts);
+    if (resized === state.working) {
+      toast("Image already matches that size.", "info");
+      return;
+    }
+    state.working = resized;
+    updateStageBadges();
+    updatePreviewFromWorking();
+    resetCropToFull();
+    toast("Resize applied.", "success");
+  });
+
+  /* ─────────── ADJUST mode ─────────── */
+  const adjSliders = Array.from(document.querySelectorAll<HTMLInputElement>("[id^='ed-aj-'][id$=brightness], [id^='ed-aj-'][id$=contrast], [id^='ed-aj-'][id$=saturation], [id^='ed-aj-'][id$=hue], [id^='ed-aj-'][id$=sepia], [id^='ed-aj-'][id$=grayscale], [id^='ed-aj-'][id$=blur], [id^='ed-aj-'][id$=invert]"));
+  // simpler: query by pattern
+  const adjKeys: (keyof Adjust)[] = ["brightness","contrast","saturation","hue","sepia","grayscale","blur","invert"];
+  const adjEls: Record<string, HTMLInputElement> = {};
+  const adjValEls: Record<string, HTMLElement> = {};
+  for (const k of adjKeys) {
+    adjEls[k] = $<HTMLInputElement>(`ed-aj-${k}`)!;
+    adjValEls[k] = $(`ed-aj-v-${k}`)!;
+    adjEls[k].addEventListener("input", () => {
+      state.adj[k] = parseFloat(adjEls[k].value);
+      const def = parseFloat(adjEls[k].dataset.default || "0");
+      const num = k === "blur" ? state.adj[k] : Math.round(state.adj[k]);
+      adjValEls[k].textContent = formatAdjValue(k, num);
+      adjValEls[k].classList.toggle("is-changed", num !== def);
+      clearActiveAdjPreset();
+      applyPreviewFilter();
+    });
+  }
+
+  function formatAdjValue(key: keyof Adjust, n: number) {
+    if (key === "hue") return `${n}°`;
+    if (key === "blur") return `${n}px`;
+    return `${n}%`;
+  }
+
+  const ADJ_PRESETS: Record<string, Partial<Adjust>> = {
+    vivid: { saturation: 140, contrast: 115 },
+    mono: { saturation: 0, contrast: 110 },
+    warm: { hue: -10, sepia: 30, contrast: 105 },
+    cool: { hue: 15, saturation: 90 },
+    dramatic: { contrast: 140, brightness: 95, saturation: 110 },
+    soft: { contrast: 92, brightness: 105, blur: 0.5 },
+  };
+  document.querySelectorAll<HTMLButtonElement>(".preset-pill[data-apreset]").forEach((p) => {
+    p.addEventListener("click", () => {
+      const cfg = ADJ_PRESETS[p.dataset.apreset!];
+      if (!cfg) return;
+      state.adj = { ...DEFAULT_ADJUST, ...cfg };
+      syncAdjSliders();
+      document.querySelectorAll<HTMLElement>(".preset-pill[data-apreset]").forEach((b) => b.classList.remove("is-active"));
+      p.classList.add("is-active");
+      applyPreviewFilter();
+    });
+  });
+  $("ed-aj-reset")!.addEventListener("click", () => {
+    state.adj = { ...DEFAULT_ADJUST };
+    syncAdjSliders();
+    clearActiveAdjPreset();
+    applyPreviewFilter();
+  });
+  $("ed-aj-apply")!.addEventListener("click", () => {
+    if (!state.working) return;
+    state.working = applyAdjust(state.working, state.adj);
+    state.adj = { ...DEFAULT_ADJUST };
+    state.appliedAdj = { ...DEFAULT_ADJUST };
+    syncAdjSliders();
+    applyPreviewFilter();
+    updateStageBadges();
+    updatePreviewFromWorking();
+    resetCropToFull();
+    toast("Adjustments baked into the working image.", "success");
+  });
+
+  function syncAdjSliders() {
+    for (const k of adjKeys) {
+      adjEls[k].value = String(state.adj[k]);
+      const def = parseFloat(adjEls[k].dataset.default || "0");
+      const num = k === "blur" ? state.adj[k] : Math.round(state.adj[k]);
+      adjValEls[k].textContent = formatAdjValue(k, num);
+      adjValEls[k].classList.toggle("is-changed", num !== def);
+    }
+  }
+  function clearActiveAdjPreset() {
+    document.querySelectorAll<HTMLElement>(".preset-pill[data-apreset]").forEach((b) => b.classList.remove("is-active"));
+  }
+
+  /* ─────────── COMPRESS mode ─────────── */
+  const cpQ = $<HTMLInputElement>("ed-cp-q")!;
+  const cpQv = $("ed-cp-q-value")!;
+  cpQ.addEventListener("input", () => {
+    state.exportQuality = parseInt(cpQ.value, 10);
+    cpQv.textContent = String(state.exportQuality);
+  });
+  document.querySelectorAll<HTMLButtonElement>(".preset-pill[data-cpreset]").forEach((p) => {
+    p.addEventListener("click", () => {
+      state.exportQuality = parseInt(p.dataset.cpreset!, 10);
+      cpQ.value = String(state.exportQuality);
+      cpQv.textContent = String(state.exportQuality);
+    });
+  });
+
+  /* ─────────── CONVERT mode ─────────── */
+  document.querySelectorAll<HTMLButtonElement>(".format-pill[data-cformat]").forEach((p) => {
+    p.addEventListener("click", () => {
+      document.querySelectorAll<HTMLButtonElement>(".format-pill[data-cformat]").forEach((q) => q.setAttribute("aria-pressed", "false"));
+      p.setAttribute("aria-pressed", "true");
+      state.exportFormat = p.dataset.cformat!;
+    });
+  });
+
+  function syncControlsFromState() {
+    // Reflect state.exportFormat in convert pills
+    document.querySelectorAll<HTMLButtonElement>(".format-pill[data-cformat]").forEach((q) => {
+      q.setAttribute("aria-pressed", String(q.dataset.cformat === state.exportFormat));
+    });
+    cpQ.value = String(state.exportQuality);
+    cpQv.textContent = String(state.exportQuality);
+    syncAdjSliders();
+    if (state.working) {
+      rsW.value = String(state.working.width);
+      rsH.value = String(state.working.height);
+    }
+  }
+
+  /* ─────────── Top-bar actions ─────────── */
+  stageReset.addEventListener("click", () => {
+    if (!state.original) return;
+    state.working = state.original;
+    state.adj = { ...DEFAULT_ADJUST };
+    state.appliedAdj = { ...DEFAULT_ADJUST };
+    syncAdjSliders();
+    applyPreviewFilter();
+    updateStageBadges();
+    updatePreviewFromWorking();
+    resetCropToFull();
+    toast("Reset to original.", "info");
+  });
+
+  stageName.addEventListener("click", () => {
+    stageName.setAttribute("contenteditable", "true");
+    stageName.focus();
+    const range = document.createRange();
+    range.selectNodeContents(stageName);
+    const sel = window.getSelection();
+    sel?.removeAllRanges(); sel?.addRange(range);
+  });
+  stageName.addEventListener("blur", commitRename);
+  stageName.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Enter") { e.preventDefault(); stageName.blur(); }
+    if (e.key === "Escape") { e.preventDefault(); stageName.textContent = state.name; stageName.blur(); }
+  });
+  async function commitRename() {
+    stageName.setAttribute("contenteditable", "false");
+    const next = (stageName.textContent || "").trim();
+    if (!next || next === state.name) {
+      stageName.textContent = state.name;
+      return;
+    }
+    state.name = next;
+    if (state.currentId) {
+      await updateImage(state.currentId, { name: next });
+      await refreshLibrary();
+    }
+  }
+
+  stageSave.addEventListener("click", async () => {
+    if (!state.working) return;
+    stageSave.disabled = true;
+    try {
+      const blob = await encodeRaster(state.working, {
+        format: state.exportFormat,
+        quality: state.exportQuality,
+      });
+      const thumbnail = makeThumbnail(state.working);
+      const targetExt = rasterExtFor(state.exportFormat);
+      const finalName = replaceExt(state.name, targetExt);
+      if (state.currentId) {
+        await updateImage(state.currentId, {
+          name: finalName,
+          blob,
+          width: state.working.width,
+          height: state.working.height,
+          format: state.exportFormat,
+          thumbnail,
+        });
+        toast(`Saved updates to "${finalName}".`, "success");
+      } else {
+        const rec = await addImage({
+          name: finalName,
+          blob,
+          width: state.working.width,
+          height: state.working.height,
+          format: state.exportFormat,
+          thumbnail,
+        });
+        state.currentId = rec.id;
+        toast(`Saved "${finalName}" to your library.`, "success");
+      }
+      state.name = finalName;
+      updateStageBadges();
+      await refreshLibrary();
+    } catch (err: any) {
+      toast(err?.message || "Save failed.", "error");
+    } finally {
+      stageSave.disabled = !state.working;
+    }
+  });
+
+  stageExport.addEventListener("click", async () => {
+    if (!state.working) return;
+    stageExport.disabled = true;
+    const label = stageExport.querySelector(".btn-label")!;
+    const original = label.textContent;
+    label.textContent = "Exporting…";
+    try {
+      const blob = await encodeRaster(state.working, {
+        format: state.exportFormat,
+        quality: state.exportQuality,
+      });
+      const targetExt = rasterExtFor(state.exportFormat);
+      downloadBlob(blob, replaceExt(state.name || "pixelmorph", targetExt));
+      toast(`Exported ${humanFileSize(blob.size)}.`, "success");
+    } catch (err: any) {
+      toast(err?.message || "Export failed.", "error");
+    } finally {
+      label.textContent = original;
+      stageExport.disabled = !state.working;
+    }
+  });
+
+  /* ─────────── Library actions ─────────── */
+  libAdd.addEventListener("click", () => libAddInput.click());
+  libAddInput.addEventListener("change", async () => {
+    if (!libAddInput.files?.length) return;
+    const files = Array.from(libAddInput.files);
+    libAddInput.value = "";
+    let lastId: string | null = null;
+    for (const file of files) {
+      if (!isImageFile(file)) continue;
+      try {
+        const canvas = await decodeToCanvas(file);
+        const thumbnail = makeThumbnail(canvas);
+        const fmt = inferFormatId(file);
+        const rec = await addImage({
+          name: file.name,
+          blob: file,
+          width: canvas.width,
+          height: canvas.height,
+          format: fmt,
+          thumbnail,
+        });
+        lastId = rec.id;
+      } catch (err) {
+        console.error(err);
+        toast(`Skipped "${file.name}".`, "error");
+      }
+    }
+    await refreshLibrary();
+    if (files.length > 0) {
+      toast(`Added ${files.length} image${files.length === 1 ? "" : "s"}.`, "success");
+      if (lastId && !state.working) await loadFromLibrary(lastId);
+    }
+  });
+
+  libExport.addEventListener("click", async () => {
+    try {
+      const n = await exportLibrary();
+      if (n === 0) toast("Library is empty — nothing to back up.", "info");
+      else toast(`Backed up ${n} image${n === 1 ? "" : "s"}.`, "success");
+    } catch (err: any) {
+      toast(err?.message || "Backup failed.", "error");
+    }
+  });
+  libImport.addEventListener("click", () => libImportInput.click());
+  libImportInput.addEventListener("change", async () => {
+    if (!libImportInput.files?.length) return;
+    const file = libImportInput.files[0];
+    libImportInput.value = "";
+    try {
+      const { imported, skipped } = await importLibrary(file);
+      await refreshLibrary();
+      toast(`Imported ${imported}${skipped ? `, skipped ${skipped} duplicate${skipped === 1 ? "" : "s"}` : ""}.`, "success");
+    } catch (err: any) {
+      toast(err?.message || "Import failed.", "error");
+    }
+  });
+
+  libSearch.addEventListener("input", () => {
+    state.librarySearch = libSearch.value.trim().toLowerCase();
+    renderLibrary();
+  });
+
+  async function refreshLibrary() {
+    state.library = await listImages();
+    const used = await storageUsage();
+    libUsage.textContent = humanFileSize(used);
+    renderLibrary();
+  }
+
+  function renderLibrary() {
+    const q = state.librarySearch;
+    const items = q
+      ? state.library.filter((m) => m.name.toLowerCase().includes(q))
+      : state.library;
+    libGrid.innerHTML = "";
+    if (state.library.length === 0) {
+      libGrid.appendChild(libEmpty);
+      libEmpty.hidden = false;
+      return;
+    }
+    if (items.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "lib-empty t-body-sm";
+      empty.style.gridColumn = "1 / -1";
+      empty.style.textAlign = "center";
+      empty.style.padding = "16px";
+      empty.style.color = "var(--color-mute)";
+      empty.textContent = `No images match "${q}".`;
+      libGrid.appendChild(empty);
+      return;
+    }
+    for (const meta of items) {
+      const card = document.createElement("div");
+      card.className = "lib-card";
+      if (meta.id === state.currentId) card.classList.add("is-active");
+      card.dataset.id = meta.id;
+      const thumbWrap = document.createElement("div");
+      thumbWrap.className = "thumb-wrap";
+      if (meta.thumbnail) {
+        const img = document.createElement("img");
+        img.src = meta.thumbnail; img.alt = "";
+        thumbWrap.appendChild(img);
+      }
+      card.appendChild(thumbWrap);
+      const metaBox = document.createElement("div");
+      metaBox.className = "meta";
+      const name = document.createElement("div");
+      name.className = "name"; name.title = meta.name;
+      name.textContent = meta.name;
+      metaBox.appendChild(name);
+      const sub = document.createElement("div");
+      sub.className = "sub";
+      sub.textContent = `${meta.width}×${meta.height} · ${humanFileSize(meta.size)}`;
+      metaBox.appendChild(sub);
+      card.appendChild(metaBox);
+
+      const overlay = document.createElement("div");
+      overlay.className = "lib-card-overlay";
+      const dlBtn = document.createElement("button");
+      dlBtn.title = "Download"; dlBtn.setAttribute("aria-label", "Download image");
+      dlBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+      dlBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const full = await getImage(meta.id);
+        if (full) downloadBlob(full.blob, full.name);
+      });
+      const rmBtn = document.createElement("button");
+      rmBtn.className = "danger";
+      rmBtn.title = "Delete"; rmBtn.setAttribute("aria-label", "Delete image");
+      rmBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+      rmBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!confirm(`Delete "${meta.name}" from your library?`)) return;
+        await deleteImage(meta.id);
+        if (state.currentId === meta.id) {
+          state.currentId = null;
+        }
+        await refreshLibrary();
+        toast("Deleted.", "info");
+      });
+      overlay.appendChild(dlBtn);
+      overlay.appendChild(rmBtn);
+      card.appendChild(overlay);
+
+      card.addEventListener("click", () => loadFromLibrary(meta.id));
+      libGrid.appendChild(card);
+    }
+  }
+
+  function markActiveLibCard() {
+    document.querySelectorAll<HTMLElement>(".lib-card").forEach((el) => {
+      el.classList.toggle("is-active", el.dataset.id === state.currentId);
+    });
+  }
+
+  /* ─────────── Global drop / paste ─────────── */
+  stageDrop.addEventListener("click", () => libAddInput.click());
+  stageDrop.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); libAddInput.click(); }
+  });
+  let dragDepth = 0;
+  document.addEventListener("dragenter", (e) => {
+    if (!e.dataTransfer?.types?.includes("Files")) return;
+    dragDepth++;
+    document.body.classList.add("dragging-image");
+  });
+  document.addEventListener("dragleave", () => {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) document.body.classList.remove("dragging-image");
+  });
+  document.addEventListener("dragover", (e) => { e.preventDefault(); });
+  document.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dragDepth = 0;
+    document.body.classList.remove("dragging-image");
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (!files.length) return;
+    const first = files.find(isImageFile);
+    if (!first) return;
+    await loadImageFile(first);
+  });
+  document.addEventListener("paste", async (e) => {
+    const items = (e as ClipboardEvent).clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind === "file") {
+        const f = item.getAsFile();
+        if (f) { await loadImageFile(f); break; }
+      }
+    }
+  });
+
+  /* ─────────── Resize observer to keep crop overlay aligned ─────────── */
+  const ro = new ResizeObserver(() => refreshCropOverlay());
+  ro.observe(stagePreview);
+
+  /* ─────────── Boot ─────────── */
+  switchMode("crop");
+  refreshLibrary();
+</script>

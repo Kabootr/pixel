@@ -1,0 +1,142 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/Hero.astro";
+import Compressor from "../components/Compressor.astro";
+import FAQ from "../components/FAQ.astro";
+import { toFaqPageSchema } from "../lib/faqData.js";
+
+const title = "Compress Images Online — Free, Private Browser Compressor | PixelMorph";
+const description =
+  "Compress PNG, JPG and WebP images in your browser. Bulk compress with quality presets, automatic best-format pick, and size-saving previews. No upload, no signup, no file-size limit.";
+const keywords = [
+  "image compressor", "compress image online", "bulk image compressor", "batch compress images",
+  "compress png", "compress jpg", "compress webp", "image size reducer",
+  "browser image compressor", "online image compressor no upload", "private image compressor",
+  "pixelmorph compress", "reduce image file size",
+].join(", ");
+
+const siteUrl = "https://pixelmorph.app";
+const pageUrl = `${siteUrl}/compress`;
+
+const faqs = [
+  {
+    q: "Does compression upload my files?",
+    a: "No. Everything happens inside your browser. There's no server endpoint that accepts your image data — open DevTools and watch the Network tab if you want to verify it yourself.",
+  },
+  {
+    q: "What does \"Auto\" output format do?",
+    a: "Auto keeps each file in its source format unless the source is a PNG over 50 KB, in which case it switches to WebP — PNGs of photos compress dramatically better as WebP with no visible loss. For anything outside the common raster set (SVG, TIFF), Auto falls back to WebP.",
+  },
+  {
+    q: "What's the right quality value?",
+    a: "60 is fine for web thumbnails and post images, 72–82 is a great default for most photo work, 92+ is for archival or print prep. JPG starts to show artifacts below 65; WebP below 50. When in doubt, start at 82 and trust your eyes.",
+  },
+  {
+    q: "Should I compress to JPG or WebP?",
+    a: "WebP is ~25–35% smaller than JPG at the same visual quality and is supported by every modern browser. Pick WebP unless you're handing the file to a tool or printer that requires JPG.",
+  },
+  {
+    q: "Will the output ever be bigger than the original?",
+    a: "Sometimes. Re-encoding a highly-compressed JPG at a high quality, or compressing flat graphics into JPG, can grow file size. The per-file row tells you exactly when this happens so you can lower quality or pick a different format.",
+  },
+  {
+    q: "Can I hit a specific file-size target like 1 MB?",
+    a: "Not directly — file size is a function of dimensions, format and quality, not a target you can dial in. The fastest path: turn on \"Cap long side\" in advanced settings (1920 is a good default), pick WebP, and slide quality down until each file is under your cap.",
+  },
+];
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "PixelMorph Image Compressor",
+    url: pageUrl,
+    applicationCategory: "MultimediaApplication",
+    applicationSubCategory: "Image Compressor",
+    operatingSystem: "Any (browser-based)",
+    description,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: [
+      "Compress JPG, PNG and WebP images",
+      "Auto-format selection per file",
+      "Bulk / batch compress with single ZIP download",
+      "Quality slider with size-delta preview",
+      "Optional pre-compress resize to cap dimensions",
+      "100% client-side — files never leave your browser",
+    ],
+    browserRequirements: "Requires a modern browser with Canvas API support",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to compress images online for free",
+    description: "Compress PNG, JPG and WebP in your browser with PixelMorph.",
+    totalTime: "PT15S",
+    step: [
+      { "@type": "HowToStep", name: "Drop your images", text: "Drag-drop, click to browse, or paste an image from your clipboard." },
+      { "@type": "HowToStep", name: "Pick a format and quality", text: "Leave on Auto, or pin JPG / WebP / PNG. Slide quality down for smaller files, up for fewer artifacts." },
+      { "@type": "HowToStep", name: "Download the results", text: "Click Compress all. Save each file or grab the whole batch as a ZIP." },
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "PixelMorph", item: `${siteUrl}/` },
+      { "@type": "ListItem", position: 2, name: "Compress", item: pageUrl },
+    ],
+  },
+  toFaqPageSchema(faqs),
+];
+---
+
+<Layout title={title} description={description} keywords={keywords} jsonLd={jsonLd}>
+  <Hero
+    eyebrow="Compress · Private · Bulk"
+    title="Shrink images without giving them away."
+    subtitle="Drop photos and screenshots. Pick a quality. Watch the size savings tally in real time — every byte counts, and none of them leave your machine."
+  >
+    <Compressor id="compressor" />
+  </Hero>
+
+  <section class="page-container compress-explain">
+    <div class="explain-grid">
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Smart defaults</span>
+        <h2 class="t-display-md">Auto picks the right format.</h2>
+        <p class="t-body-md">A 2 MB PNG of a photo compresses 80–90% smaller as a WebP with no visible loss. Auto recognises that case and switches; anything that should stay PNG (icons, logos, screenshots) stays PNG.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Honest numbers</span>
+        <h2 class="t-display-md">See savings per file and total.</h2>
+        <p class="t-body-md">Every row shows the delta — green when smaller, amber when bigger. The action bar tallies cumulative bytes saved across the batch.</p>
+      </article>
+      <article class="explain-card card-lg elev-2">
+        <span class="t-caption-mono explain-eyebrow">Bigger win</span>
+        <h2 class="t-display-md">Cap dimensions for huge files.</h2>
+        <p class="t-body-md">The single biggest size win for camera-roll photos isn't quality — it's resolution. Cap long side at 1920 in advanced settings and watch megabytes drop to kilobytes.</p>
+      </article>
+    </div>
+  </section>
+
+  <FAQ
+    items={faqs}
+    eyebrow="Compress FAQs"
+    title="Compression, plain answers."
+  />
+</Layout>
+
+<style>
+  .compress-explain { padding-top: 64px; }
+  .explain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .explain-card { display: flex; flex-direction: column; gap: 12px; }
+  .explain-eyebrow { color: var(--color-mute); }
+  @media (max-width: 860px) {
+    .explain-grid { grid-template-columns: 1fr; }
+    .compress-explain { padding-top: 48px; }
+  }
+</style>

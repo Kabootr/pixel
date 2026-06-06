@@ -1,0 +1,721 @@
+---
+interface Props {
+  id?: string;
+}
+const { id = "resizer" } = Astro.props;
+
+const OUTPUT_FORMATS = [
+  { id: "keep", label: "Same as input" },
+  { id: "png", label: "PNG" },
+  { id: "jpg", label: "JPG" },
+  { id: "webp", label: "WebP" },
+];
+
+const PRESETS = [
+  { label: "50%", mode: "percent", percent: 50 },
+  { label: "25%", mode: "percent", percent: 25 },
+  { label: "Long side 1080", mode: "fit", maxSide: 1080 },
+  { label: "Long side 1920", mode: "fit", maxSide: 1920 },
+  { label: "Long side 2560", mode: "fit", maxSide: 2560 },
+];
+---
+
+<section id={id} class="tool-wrap resizer">
+  <div class="tool-shell elev-4">
+    <div
+      class="drop-zone"
+      id={`${id}-drop`}
+      role="button"
+      tabindex="0"
+      aria-label="Drop images here, or click to choose files"
+    >
+      <div class="drop-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9" />
+          <polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+      </div>
+      <h3 class="t-display-sm">Drop images to resize</h3>
+      <p class="t-body-sm drop-sub">
+        or <span class="link-like">browse</span> — PNG, JPG, WebP, GIF, SVG, TIFF
+      </p>
+      <p class="t-caption-mono drop-meta">
+        100% client-side · no uploads · no size limit
+      </p>
+      <input
+        type="file"
+        id={`${id}-input`}
+        multiple
+        accept=".png,.jpg,.jpeg,.webp,.gif,.svg,.tif,.tiff,image/*"
+        hidden
+      />
+    </div>
+
+    <div class="controls" id={`${id}-controls`} hidden>
+      <div class="controls-row">
+        <label class="control-label t-caption-mono">Resize mode</label>
+        <div class="format-pills" role="radiogroup" aria-label="Resize mode">
+          <button type="button" class="format-pill" data-mode="percent" role="radio" aria-pressed="true">By %</button>
+          <button type="button" class="format-pill" data-mode="px" role="radio" aria-pressed="false">By pixels</button>
+          <button type="button" class="format-pill" data-mode="fit" role="radio" aria-pressed="false">Fit to box</button>
+        </div>
+      </div>
+
+      <div class="resize-fields">
+        <div class="field-group field-percent">
+          <label class="t-body-sm setting-label" for={`${id}-percent`}>
+            Scale
+            <span class="quality-value" id={`${id}-percent-value`}>100%</span>
+          </label>
+          <input
+            type="range"
+            id={`${id}-percent`}
+            class="range"
+            min="5"
+            max="400"
+            value="100"
+            step="1"
+          />
+        </div>
+
+        <div class="field-group field-px" hidden>
+          <label class="t-body-sm setting-label">Dimensions</label>
+          <div class="px-row">
+            <input type="number" class="input" id={`${id}-w`} min="1" placeholder="Width" />
+            <span class="px-x" aria-hidden="true">×</span>
+            <input type="number" class="input" id={`${id}-h`} min="1" placeholder="Height" />
+            <button type="button" class="lock-btn" id={`${id}-lock`} aria-pressed="true" title="Lock aspect ratio">
+              <svg class="lock-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+              <svg class="lock-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>
+            </button>
+          </div>
+          <p class="t-caption-mono setting-help">Leave one side blank to keep aspect ratio.</p>
+        </div>
+
+        <div class="field-group field-fit" hidden>
+          <label class="t-body-sm setting-label" for={`${id}-fit`}>
+            Max long side (px)
+            <span class="quality-value" id={`${id}-fit-value`}>1920</span>
+          </label>
+          <input
+            type="range"
+            id={`${id}-fit`}
+            class="range"
+            min="64"
+            max="8192"
+            value="1920"
+            step="32"
+          />
+          <p class="t-caption-mono setting-help">Shrinks images so their long edge fits the limit. Smaller images are left alone.</p>
+        </div>
+      </div>
+
+      <div class="preset-row">
+        <span class="t-caption-mono preset-label">Quick presets</span>
+        <div class="preset-pills">
+          {PRESETS.map((p) => (
+            <button
+              type="button"
+              class="preset-pill"
+              data-preset={JSON.stringify(p)}
+            >{p.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <details class="settings-details">
+        <summary class="settings-summary">
+          <span class="t-body-sm-strong">Output format & quality</span>
+          <span class="t-caption-mono settings-hint">jpg · webp · png</span>
+        </summary>
+        <div class="settings-grid">
+          <div class="setting">
+            <label class="t-body-sm setting-label">Format</label>
+            <select class="input" id={`${id}-format`}>
+              {OUTPUT_FORMATS.map((f) => (
+                <option value={f.id}>{f.label}</option>
+              ))}
+            </select>
+            <p class="t-caption-mono setting-help">"Same" keeps each file in its source format.</p>
+          </div>
+          <div class="setting">
+            <label class="t-body-sm setting-label" for={`${id}-quality`}>
+              Quality
+              <span class="quality-value" id={`${id}-quality-value`}>92</span>
+            </label>
+            <input type="range" id={`${id}-quality`} class="range" min="10" max="100" value="92" step="1" />
+            <p class="t-caption-mono setting-help">For JPG / WebP outputs only.</p>
+          </div>
+          <div class="setting">
+            <label class="t-body-sm setting-label" for={`${id}-bg`}>
+              Background
+              <span class="t-caption-mono setting-hint">JPG only</span>
+            </label>
+            <div class="bg-row">
+              <input type="color" id={`${id}-bg`} value="#ffffff" class="color-swatch" />
+              <span class="t-body-sm bg-name" id={`${id}-bg-name`}>White (#ffffff)</span>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <ul class="file-list" id={`${id}-list`} aria-live="polite"></ul>
+
+    <div class="action-bar" id={`${id}-actions`} hidden>
+      <button type="button" class="btn-secondary-sm" id={`${id}-clear`}>Clear all</button>
+      <div class="action-spacer"></div>
+      <button type="button" class="btn-secondary-sm" id={`${id}-add-more`}>+ Add more</button>
+      <button type="button" class="btn-primary" id={`${id}-process-all`}>
+        <span class="btn-label">Resize all</span>
+      </button>
+      <button type="button" class="btn-primary" id={`${id}-download-zip`} hidden>Download ZIP</button>
+    </div>
+  </div>
+
+  <p class="tool-reassurance">
+    <strong>Your files never leave this page.</strong> Resizing happens inside your browser — no uploads.
+  </p>
+</section>
+
+<style>
+  .drop-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background-color: var(--color-canvas);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-ink);
+    margin-bottom: 16px;
+    border: 1px solid var(--color-hairline);
+    flex-shrink: 0;
+  }
+  .drop-sub { color: var(--color-body); margin: 8px 0 6px; }
+  .drop-meta { color: var(--color-mute); margin-top: 8px; }
+  .link-like {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .controls { margin-top: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .controls-row { display: flex; flex-direction: column; gap: 12px; }
+  .control-label { color: var(--color-mute); }
+  .format-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .resize-fields { display: flex; flex-direction: column; gap: 10px; }
+  .field-group { display: flex; flex-direction: column; gap: 10px; }
+  .setting-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--color-ink);
+    font-weight: 500;
+    flex-wrap: wrap;
+  }
+  .setting-help { color: var(--color-mute); }
+  .quality-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-body);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background-color: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+  }
+
+  .px-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .px-row .input { flex: 1 1 0; min-width: 100px; }
+  .px-x {
+    font-family: var(--font-mono);
+    color: var(--color-mute);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .lock-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .lock-btn:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+  .lock-btn[aria-pressed="true"] { background-color: var(--color-ink); color: var(--color-on-primary); border-color: var(--color-ink); }
+  .lock-btn .lock-off { display: none; }
+  .lock-btn[aria-pressed="false"] .lock-on { display: none; }
+  .lock-btn[aria-pressed="false"] .lock-off { display: inline-block; }
+
+  .preset-row { display: flex; flex-direction: column; gap: 8px; }
+  .preset-label { color: var(--color-mute); }
+  .preset-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .preset-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .preset-pill:hover { border-color: var(--color-hairline-strong); color: var(--color-ink); }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    padding: 8px 16px 20px;
+  }
+  .setting { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .bg-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .color-swatch {
+    width: 44px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm);
+    background: none;
+    cursor: pointer;
+  }
+  .bg-name { color: var(--color-body); font-family: var(--font-mono); font-size: 12px; }
+
+  @media (max-width: 720px) {
+    .settings-grid { grid-template-columns: 1fr; gap: 18px; }
+  }
+</style>
+
+<script>
+  import {
+    decodeToCanvas,
+    resizeCanvas,
+    encodeRaster,
+    humanFileSize,
+    isImageFile,
+    inferFormatId,
+    replaceExt,
+    rasterExtFor,
+  } from "../lib/image-ops.js";
+
+  document.querySelectorAll<HTMLElement>(".resizer").forEach((root) => {
+    const id = root.querySelector<HTMLElement>("[id$='-drop']")?.id.replace("-drop", "");
+    if (!id) return;
+    const $ = <T extends HTMLElement = HTMLElement>(suffix: string) =>
+      document.getElementById(`${id}-${suffix}`) as T | null;
+
+    const drop = $("drop")!;
+    const input = $<HTMLInputElement>("input")!;
+    const controls = $("controls")!;
+    const list = $<HTMLUListElement>("list")!;
+    const actions = $("actions")!;
+    const clearBtn = $("clear")!;
+    const addMoreBtn = $("add-more")!;
+    const processBtn = $<HTMLButtonElement>("process-all")!;
+    const zipBtn = $<HTMLButtonElement>("download-zip")!;
+    const percent = $<HTMLInputElement>("percent")!;
+    const percentValue = $("percent-value")!;
+    const wInput = $<HTMLInputElement>("w")!;
+    const hInput = $<HTMLInputElement>("h")!;
+    const lockBtn = $("lock")!;
+    const fit = $<HTMLInputElement>("fit")!;
+    const fitValue = $("fit-value")!;
+    const formatSel = $<HTMLSelectElement>("format")!;
+    const quality = $<HTMLInputElement>("quality")!;
+    const qualityValue = $("quality-value")!;
+    const bg = $<HTMLInputElement>("bg")!;
+    const bgName = $("bg-name")!;
+
+    type Entry = {
+      id: string;
+      file: File;
+      srcFormat: string;
+      srcW?: number;
+      srcH?: number;
+      status: "queued" | "processing" | "done" | "error";
+      thumbUrl: string;
+      blob?: Blob;
+      outName?: string;
+      outW?: number;
+      outH?: number;
+      error?: string;
+    };
+
+    const state = {
+      files: [] as Entry[],
+      mode: "percent" as "percent" | "px" | "fit",
+      lockAspect: true,
+      aspectRatio: 1, // computed from first image when lock is on
+      lastEdited: "w" as "w" | "h",
+    };
+
+    /* Drop / paste */
+    drop.addEventListener("click", () => input.click());
+    drop.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+    });
+    ["dragenter", "dragover"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.add("is-dragover"); }),
+    );
+    ["dragleave", "drop"].forEach((evt) =>
+      drop.addEventListener(evt, (e) => { e.preventDefault(); drop.classList.remove("is-dragover"); }),
+    );
+    drop.addEventListener("drop", (e) => {
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt?.files) addFiles(dt.files);
+    });
+    input.addEventListener("change", () => { if (input.files) addFiles(input.files); input.value = ""; });
+    addMoreBtn.addEventListener("click", () => input.click());
+    root.addEventListener("paste", (e) => {
+      const items = (e as ClipboardEvent).clipboardData?.items;
+      if (!items) return;
+      const files: File[] = [];
+      for (const item of items) {
+        if (item.kind === "file") { const f = item.getAsFile(); if (f) files.push(f); }
+      }
+      if (files.length) addFiles(files as unknown as FileList);
+    });
+
+    /* Mode pills */
+    root.querySelectorAll<HTMLButtonElement>(".format-pill[data-mode]").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        root.querySelectorAll<HTMLButtonElement>(".format-pill[data-mode]").forEach((p) => p.setAttribute("aria-pressed", "false"));
+        pill.setAttribute("aria-pressed", "true");
+        state.mode = pill.dataset.mode as any;
+        root.querySelector<HTMLElement>(".field-percent")!.hidden = state.mode !== "percent";
+        root.querySelector<HTMLElement>(".field-px")!.hidden = state.mode !== "px";
+        root.querySelector<HTMLElement>(".field-fit")!.hidden = state.mode !== "fit";
+        requeueDone();
+      });
+    });
+
+    /* Sliders */
+    percent.addEventListener("input", () => { percentValue.textContent = `${percent.value}%`; requeueDone(); });
+    fit.addEventListener("input", () => { fitValue.textContent = String(fit.value); requeueDone(); });
+    quality.addEventListener("input", () => { qualityValue.textContent = quality.value; requeueDone(); });
+
+    /* Pixel inputs with aspect lock */
+    wInput.addEventListener("input", () => {
+      state.lastEdited = "w";
+      if (state.lockAspect && state.aspectRatio) {
+        const w = parseInt(wInput.value, 10);
+        if (w > 0) hInput.value = String(Math.round(w / state.aspectRatio));
+      }
+      requeueDone();
+    });
+    hInput.addEventListener("input", () => {
+      state.lastEdited = "h";
+      if (state.lockAspect && state.aspectRatio) {
+        const h = parseInt(hInput.value, 10);
+        if (h > 0) wInput.value = String(Math.round(h * state.aspectRatio));
+      }
+      requeueDone();
+    });
+    lockBtn.addEventListener("click", () => {
+      state.lockAspect = !state.lockAspect;
+      lockBtn.setAttribute("aria-pressed", String(state.lockAspect));
+    });
+
+    /* Output format / quality / bg */
+    formatSel.addEventListener("change", requeueDone);
+    bg.addEventListener("input", () => {
+      bgName.textContent = `${labelForColor(bg.value)} (${bg.value})`;
+      requeueDone();
+    });
+
+    /* Presets */
+    root.querySelectorAll<HTMLButtonElement>(".preset-pill").forEach((pill) => {
+      pill.addEventListener("click", () => {
+        const p = JSON.parse(pill.dataset.preset!);
+        if (p.mode === "percent") {
+          activateMode("percent");
+          percent.value = String(p.percent);
+          percentValue.textContent = `${p.percent}%`;
+        } else if (p.mode === "fit") {
+          activateMode("fit");
+          fit.value = String(p.maxSide);
+          fitValue.textContent = String(p.maxSide);
+        }
+        requeueDone();
+      });
+    });
+
+    function activateMode(mode: "percent" | "px" | "fit") {
+      root.querySelectorAll<HTMLButtonElement>(".format-pill[data-mode]").forEach((p) => {
+        p.setAttribute("aria-pressed", String(p.dataset.mode === mode));
+      });
+      state.mode = mode;
+      root.querySelector<HTMLElement>(".field-percent")!.hidden = mode !== "percent";
+      root.querySelector<HTMLElement>(".field-px")!.hidden = mode !== "px";
+      root.querySelector<HTMLElement>(".field-fit")!.hidden = mode !== "fit";
+    }
+
+    /* Buttons */
+    clearBtn.addEventListener("click", () => {
+      state.files.forEach((f) => URL.revokeObjectURL(f.thumbUrl));
+      state.files = [];
+      render();
+    });
+    processBtn.addEventListener("click", async () => {
+      processBtn.disabled = true;
+      const labelEl = processBtn.querySelector(".btn-label")!;
+      const original = labelEl.textContent;
+      labelEl.textContent = "Resizing…";
+      try {
+        for (const f of state.files) if (f.status === "queued") await processOne(f);
+      } finally {
+        labelEl.textContent = original;
+        processBtn.disabled = false;
+        const allDone = state.files.length > 1 && state.files.every((f) => f.status === "done");
+        zipBtn.hidden = !allDone;
+      }
+    });
+    zipBtn.addEventListener("click", downloadZip);
+
+    async function addFiles(fileList: FileList | File[]) {
+      const arr = Array.from(fileList).filter(isImageFile);
+      for (const file of arr) {
+        const entry: Entry = {
+          id: crypto.randomUUID(),
+          file,
+          srcFormat: inferFormatId(file),
+          status: "queued",
+          thumbUrl: URL.createObjectURL(file),
+        };
+        state.files.push(entry);
+        // Probe dimensions for the file-info row.
+        probeDimensions(entry);
+      }
+      render();
+    }
+
+    function probeDimensions(entry: Entry) {
+      const img = new Image();
+      img.onload = () => {
+        entry.srcW = img.naturalWidth;
+        entry.srcH = img.naturalHeight;
+        if (state.files.length === 1) {
+          state.aspectRatio = entry.srcW / entry.srcH;
+          if (state.mode === "px" && !wInput.value && !hInput.value) {
+            wInput.value = String(entry.srcW);
+            hInput.value = String(entry.srcH);
+          }
+        }
+        render();
+      };
+      img.src = entry.thumbUrl;
+    }
+
+    function removeFile(eid: string) {
+      const e = state.files.find((f) => f.id === eid);
+      if (e) URL.revokeObjectURL(e.thumbUrl);
+      state.files = state.files.filter((f) => f.id !== eid);
+      render();
+    }
+
+    function buildResizeOpts() {
+      if (state.mode === "percent") {
+        const p = parseInt(percent.value, 10);
+        if (!p || p === 100) return undefined;
+        return { mode: "percent" as const, percent: p };
+      }
+      if (state.mode === "px") {
+        const w = parseInt(wInput.value, 10) || undefined;
+        const h = parseInt(hInput.value, 10) || undefined;
+        if (!w && !h) return undefined;
+        // When lock is on, only pass the explicitly edited side so resizeCanvas keeps aspect.
+        if (state.lockAspect) {
+          return state.lastEdited === "w"
+            ? { mode: "px" as const, width: w }
+            : { mode: "px" as const, height: h };
+        }
+        return { mode: "px" as const, width: w, height: h };
+      }
+      if (state.mode === "fit") {
+        const m = parseInt(fit.value, 10);
+        if (!m) return undefined;
+        return { mode: "fit" as const, maxSide: m };
+      }
+      return undefined;
+    }
+
+    function targetFormatFor(entry: Entry) {
+      const sel = formatSel.value;
+      if (sel === "keep") {
+        // Use src if raster; otherwise fall back to PNG.
+        if (["png", "jpg", "jpeg", "webp"].includes(entry.srcFormat)) {
+          return entry.srcFormat === "jpeg" ? "jpg" : entry.srcFormat;
+        }
+        return "png";
+      }
+      return sel;
+    }
+
+    async function processOne(entry: Entry) {
+      entry.status = "processing";
+      render();
+      try {
+        const src = await decodeToCanvas(entry.file);
+        const resized = resizeCanvas(src, buildResizeOpts());
+        const fmt = targetFormatFor(entry);
+        const blob = await encodeRaster(resized, {
+          format: fmt,
+          quality: parseInt(quality.value, 10),
+          background: bg.value,
+        });
+        entry.blob = blob;
+        entry.outW = resized.width;
+        entry.outH = resized.height;
+        entry.outName = replaceExt(entry.file.name, rasterExtFor(fmt));
+        entry.status = "done";
+      } catch (err: any) {
+        entry.status = "error";
+        entry.error = err?.message || "Resize failed.";
+      }
+      render();
+    }
+
+    function requeueDone() {
+      let changed = false;
+      state.files.forEach((f) => {
+        if (f.status === "done" || f.status === "error") {
+          f.status = "queued";
+          f.blob = undefined;
+          f.error = undefined;
+          changed = true;
+        }
+      });
+      if (changed) render();
+    }
+
+    async function downloadZip() {
+      const done = state.files.filter((f) => f.status === "done" && f.blob);
+      if (!done.length) return;
+      zipBtn.disabled = true;
+      const original = zipBtn.textContent;
+      zipBtn.textContent = "Zipping…";
+      try {
+        const JSZip = (await import("jszip")).default;
+        const zip = new JSZip();
+        for (const f of done) zip.file(f.outName!, f.blob!);
+        const blob = await zip.generateAsync({ type: "blob" });
+        downloadBlob(blob, `pixelmorph-resized-${Date.now()}.zip`);
+      } finally {
+        zipBtn.textContent = original;
+        zipBtn.disabled = false;
+      }
+    }
+
+    function downloadOne(entry: Entry) {
+      if (!entry.blob || !entry.outName) return;
+      downloadBlob(entry.blob, entry.outName);
+    }
+
+    function downloadBlob(blob: Blob, name: string) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function render() {
+      const empty = state.files.length === 0;
+      controls.hidden = empty;
+      actions.hidden = empty;
+      list.innerHTML = "";
+      if (empty) { zipBtn.hidden = true; return; }
+
+      for (const entry of state.files) {
+        const li = document.createElement("li");
+        li.className = "file-row";
+
+        const thumb = document.createElement("img");
+        thumb.className = "file-thumb";
+        thumb.alt = ""; thumb.src = entry.thumbUrl;
+        thumb.onerror = () => { thumb.style.opacity = "0.4"; };
+        li.appendChild(thumb);
+
+        const meta = document.createElement("div");
+        meta.className = "file-meta";
+        const name = document.createElement("span");
+        name.className = "file-name";
+        name.textContent = entry.file.name;
+        meta.appendChild(name);
+
+        const info = document.createElement("span");
+        info.className = "file-info";
+        let infoText = `${entry.srcFormat.toUpperCase()} · ${humanFileSize(entry.file.size)}`;
+        if (entry.srcW && entry.srcH) infoText += ` · ${entry.srcW}×${entry.srcH}`;
+        if (entry.status === "done" && entry.blob) {
+          const delta = entry.blob.size - entry.file.size;
+          const pct = Math.round((delta / entry.file.size) * 100);
+          const tag = delta < 0
+            ? `<span class="saved">−${Math.abs(pct)}% · ${humanFileSize(entry.blob.size)}</span>`
+            : `<span class="grew">+${pct}% · ${humanFileSize(entry.blob.size)}</span>`;
+          infoText += `  →  ${entry.outW}×${entry.outH} · ${tag}`;
+          info.innerHTML = infoText;
+        } else {
+          info.textContent = infoText;
+        }
+        meta.appendChild(info);
+        li.appendChild(meta);
+
+        const status = document.createElement("span");
+        status.className = "file-status";
+        if (entry.status === "processing") status.innerHTML = `<span class="spinner" aria-hidden="true"></span> Resizing…`;
+        else if (entry.status === "done") { status.classList.add("is-done"); status.textContent = "✓ Done"; }
+        else if (entry.status === "error") { status.classList.add("is-error"); status.textContent = entry.error || "Failed"; }
+        else status.textContent = "Queued";
+        li.appendChild(status);
+
+        const actionsCell = document.createElement("div");
+        actionsCell.className = "file-actions";
+        const dlBtn = document.createElement("button");
+        dlBtn.type = "button"; dlBtn.className = "icon-btn";
+        dlBtn.title = "Download"; dlBtn.setAttribute("aria-label", "Download resized file");
+        dlBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+        dlBtn.disabled = entry.status !== "done";
+        dlBtn.addEventListener("click", () => downloadOne(entry));
+
+        const rmBtn = document.createElement("button");
+        rmBtn.type = "button"; rmBtn.className = "icon-btn";
+        rmBtn.title = "Remove"; rmBtn.setAttribute("aria-label", "Remove file");
+        rmBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+        rmBtn.addEventListener("click", () => removeFile(entry.id));
+
+        actionsCell.appendChild(dlBtn);
+        actionsCell.appendChild(rmBtn);
+        li.appendChild(actionsCell);
+        list.appendChild(li);
+      }
+
+      const queued = state.files.filter((f) => f.status === "queued").length;
+      const label = processBtn.querySelector(".btn-label")!;
+      label.textContent = queued > 0 ? `Resize ${queued} file${queued === 1 ? "" : "s"}` : "All done";
+      processBtn.disabled = queued === 0;
+      const allDone = state.files.length > 1 && state.files.every((f) => f.status === "done");
+      zipBtn.hidden = !allDone;
+    }
+
+    function labelForColor(hex: string) {
+      const named: Record<string, string> = {
+        "#ffffff": "White", "#000000": "Black",
+        "#f5a623": "Amber", "#0070f3": "Blue", "#7928ca": "Violet",
+      };
+      return named[hex.toLowerCase()] || "Custom";
+    }
+  });
+</script>
